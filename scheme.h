@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-enum type { ATOM, PAIR };
+enum type { ATOM, PAIR, FUNC, LAMBDA };
 
 enum error { ENOMEM, ETYPE };
 
@@ -24,6 +24,19 @@ typedef struct
   object *cdr;
 } pair_object;
 
+typedef struct
+{
+  enum type type;
+  object * (*fn) (object *, object *);
+} func_object;
+
+typedef struct
+{
+  enum type type;
+  object *args;
+  object *sexp;
+} lambda_object;
+
 #define car(X) (((pair_object *) X)->car)
 #define cdr(X) (((pair_object *) X)->cdr)
 
@@ -39,5 +52,12 @@ int list_p (object *obj);
 
 object *atom (char *str);
 object *cons (object *obj1, object *obj2);
+object *func (object * (*fn) (object *, object *));
+object *lambda (object *args, object *sexp);
 
 void append (object **li, object *obj);
+
+object *init_env ();
+
+object *fn_car (object *env, object *args);
+object *fn_cdr (object *env, object *args);

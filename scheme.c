@@ -52,9 +52,11 @@ println (object *obj)
 void
 free_object (object *obj)
 {
-  if (NULL == obj) return;
-
-  if (ATOM == obj->type)
+  if (NULL == obj)
+    {
+      return;
+    }
+  else if (ATOM == obj->type)
     {
       free (((atom_object *) obj)->name);
       free (obj);
@@ -63,6 +65,10 @@ free_object (object *obj)
     {
       free_object (car (obj));
       free_object (cdr (obj));
+      free (obj);
+    }
+  else if (FUNC == obj->type)
+    {
       free (obj);
     }
   else
@@ -132,6 +138,35 @@ cons (object *obj1, object *obj2)
   return pair;
 }
 
+object *
+func (object * (*fn) (object *, object *))
+{
+  func_object *ptr = malloc (sizeof (func_object));
+  if (NULL == ptr)
+    {
+      print_error (ENOMEM);
+      exit (1);
+    }
+  ptr->type = FUNC;
+  ptr->fn = fn;
+  return (object *) ptr;
+}
+
+object *
+lambda (object *args, object *sexp)
+{
+  lambda_object *ptr = malloc (sizeof (lambda_object));
+  if (NULL == ptr)
+    {
+      print_error (ENOMEM);
+      exit (1);
+    }
+  ptr->type = LAMBDA;
+  ptr->args = args;
+  ptr->sexp = sexp;
+  return (object *) ptr;
+}
+
 void
 append (object **li, object *obj)
 {
@@ -150,4 +185,25 @@ append (object **li, object *obj)
   object *tmp;
   for (tmp = *li; NULL != cdr (tmp); tmp = cdr (tmp));
   cdr (tmp) = obj;
+}
+
+object *
+init_env ()
+{
+  object *env = NULL;
+  append (&env, cons (cons (atom ("car"), func (&fn_car)), NULL));
+  append (&env, cons (cons (atom ("cdr"), func (&fn_cdr)), NULL));
+  return env;
+}
+
+object *
+fn_car (object *env, object *args)
+{
+  return car (car (args));
+}
+
+object *
+fn_cdr (object *env, object *args)
+{
+  return cdr (car (args));
 }

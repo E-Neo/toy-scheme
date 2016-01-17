@@ -3,15 +3,10 @@
 int
 main ()
 {
-  object *a, *b, *c, *li;
-  a = atom ("3.14159");
-  b = atom ("cat");
-  c = atom ("dog");
-  li = NULL;
-  append (&li, cons (a, NULL));
-  append (&li, cons (b, NULL));
-  append (&li, cons (c, NULL));
-  println (li);
-  free_object (li);
+  object *env = init_env ();
+  object *args = cons (cons (atom ("\"Tom\""), atom ("\"Jerry\"")), NULL);
+  println (fn_car (env, args));
+  free_object (env);
+  free_object (args);
   return 0;
 }
