@@ -44,6 +44,7 @@ void print_error (enum error error);
 void print (object *obj);
 void println (object *obj);
 
+object *copy_object (object *obj);
 void free_object (object *obj);
 
 int null_p (object *obj);
@@ -59,5 +60,9 @@ void append (object **li, object *obj);
 
 object *init_env ();
 
+object *eval_fn (object *env, object *sexp);
+object *eval (object *env, object *sexp);
+
 object *fn_car (object *env, object *args);
 object *fn_cdr (object *env, object *args);
+object *fn_cons (object *env, object *args);

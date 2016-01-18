@@ -49,6 +49,27 @@ println (object *obj)
   printf ("\n");
 }
 
+object *
+copy_object (object *obj)
+{
+  object *ret = NULL;
+  if (NULL == obj)
+    return ret;
+  else if (ATOM == obj->type)
+    ret = atom (((atom_object *) obj)->name);
+  else if (PAIR == obj->type)
+    ret = cons (copy_object (car (obj)), copy_object (cdr (obj)));
+  else if (FUNC == obj->type)
+    ret = func (((func_object *) obj)->fn);
+  else
+    {
+      print_error (ETYPE);
+      exit (1);
+    }
+
+  return ret;
+}
+
 void
 free_object (object *obj)
 {
@@ -111,7 +132,7 @@ atom (char *str)
       print_error (ENOMEM);
       exit (1);
     }
-  char *name = malloc (sizeof (strlen (str) + 1));
+  char *name = malloc (strlen (str) + 1);
   if (NULL == name)
     {
       print_error (ENOMEM);
@@ -197,13 +218,46 @@ init_env ()
 }
 
 object *
+eval_fn (object *env, object *sexp)
+{
+  object *symbol = car (sexp);
+  object *args = cdr (sexp);
+
+  if (FUNC == symbol->type)
+    return (((func_object *) symbol)->fn) (env, args);
+  else
+    return sexp;
+}
+
+object *
+eval (object *env, object *sexp)
+{
+  if (NULL == sexp) return NULL;
+
+  if (PAIR == sexp->type)
+    {
+      return eval_fn (env, sexp);
+    }
+  else
+    return sexp;
+}
+
+object *
 fn_car (object *env, object *args)
 {
-  return car (car (args));
+  return copy_object (car (car (args)));
 }
 
 object *
 fn_cdr (object *env, object *args)
 {
-  return cdr (car (args));
+  return copy_object (cdr (car (args)));
+}
+
+object *
+fn_cons (object *env, object *args)
+{
+  object *obj1 = car (args);
+  object *obj2 = car (cdr (args));
+  return cons (copy_object (obj1), copy_object (obj2));
 }
