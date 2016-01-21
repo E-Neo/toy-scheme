@@ -27,6 +27,8 @@ print (object *obj)
 
   if (ATOM == obj->type)
     printf ("%s", ((atom_object *) obj)->name);
+  else if (NUMBER == obj->type)
+    printf ("%lf", ((number_object *) obj)->num);
   else if (PAIR == obj->type)
     {
       printf ("(");
@@ -82,6 +84,10 @@ free_object (object *obj)
       free (((atom_object *) obj)->name);
       free (obj);
     }
+  else if (NUMBER == obj->type)
+    {
+      free (obj);
+    }
   else if (PAIR == obj->type)
     {
       free_object (car (obj));
@@ -124,7 +130,7 @@ list_p (object *obj)
 }
 
 object *
-atom (char *str)
+atom (const char *str)
 {
   object *atom = malloc (sizeof (atom_object));
   if (NULL == atom)
@@ -142,6 +148,34 @@ atom (char *str)
   atom->type = ATOM;
   ((atom_object *) atom)->name = name;
   return atom;
+}
+
+object *
+number (const char *str)
+{
+  number_object *ptr = malloc (sizeof (number_object));
+  if (NULL == ptr)
+    {
+      print_error (ENOMEM);
+      exit (1);
+    }
+  ptr->type = NUMBER;
+  ptr->num = atof (str);
+  return (object *) ptr;
+}
+
+object *
+number_from_double (double x)
+{
+  number_object *ptr = malloc (sizeof (number_object));
+  if (NULL == ptr)
+    {
+      print_error (ENOMEM);
+      exit (1);
+    }
+  ptr->type = NUMBER;
+  ptr->num = x;
+  return (object *) ptr;
 }
 
 object *
@@ -208,6 +242,15 @@ append (object **li, object *obj)
   cdr (tmp) = obj;
 }
 
+size_t
+length (object *li)
+{
+  object *tmp;
+  size_t len;
+  for (tmp = li, len = 0; NULL != tmp; tmp = cdr (tmp), len++);
+  return len;
+}
+
 object *
 init_env ()
 {
@@ -260,4 +303,28 @@ fn_cons (object *env, object *args)
   object *obj1 = car (args);
   object *obj2 = car (cdr (args));
   return cons (copy_object (obj1), copy_object (obj2));
+}
+
+object *
+fn_add (object *env, object *args)
+{
+  double res = 0.0;
+  object *tmp;
+  foreach (tmp, args)
+    {
+      res += ((number_object *) car (tmp))->num;
+    }
+  return number_from_double (res);
+}
+
+object *
+fn_mul (object *env, object *args)
+{
+  double res = 1.0;
+  object *tmp;
+  foreach (tmp, args)
+    {
+      res *= ((number_object *) car (tmp))->num;
+    }
+  return number_from_double (res);
 }

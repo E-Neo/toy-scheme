@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-enum type { ATOM, PAIR, FUNC, LAMBDA };
+enum type { ATOM, NUMBER, PAIR, FUNC, LAMBDA };
 
 enum error { ENOMEM, ETYPE };
 
@@ -16,6 +16,12 @@ typedef struct
   enum type type;
   char *name;
 } atom_object;
+
+typedef struct
+{
+  enum type type;
+  double num;
+} number_object;
 
 typedef struct
 {
@@ -51,12 +57,16 @@ int null_p (object *obj);
 int pair_p (object *obj);
 int list_p (object *obj);
 
-object *atom (char *str);
+object *atom (const char *str);
+object *number (const char *str);
+object *number_from_double (double x);
 object *cons (object *obj1, object *obj2);
 object *func (object * (*fn) (object *, object *));
 object *lambda (object *args, object *sexp);
 
+#define foreach(ptr, li) for (ptr = li; NULL != ptr; ptr = cdr (ptr))
 void append (object **li, object *obj);
+size_t length (object *li);
 
 object *init_env ();
 
@@ -66,3 +76,5 @@ object *eval (object *env, object *sexp);
 object *fn_car (object *env, object *args);
 object *fn_cdr (object *env, object *args);
 object *fn_cons (object *env, object *args);
+object *fn_add (object *env, object *args);
+object *fn_mul (object *env, object *args);
