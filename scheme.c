@@ -37,6 +37,10 @@ print (object *obj)
       print (cdr (obj));
       printf (")");
     }
+  else if (FUNC == obj->type)
+    {
+      printf ("#<procedure>");
+    }
   else
     {
       print_error (ETYPE);
@@ -56,9 +60,11 @@ copy_object (object *obj)
 {
   object *ret = NULL;
   if (NULL == obj)
-    return ret;
+    return NULL;
   else if (ATOM == obj->type)
     ret = atom (((atom_object *) obj)->name);
+  else if (NUMBER == obj->type)
+    ret = number_from_double (((number_object *) obj)->num);
   else if (PAIR == obj->type)
     ret = cons (copy_object (car (obj)), copy_object (cdr (obj)));
   else if (FUNC == obj->type)
@@ -269,7 +275,7 @@ eval_fn (object *env, object *sexp)
   if (FUNC == symbol->type)
     return (((func_object *) symbol)->fn) (env, args);
   else
-    return sexp;
+    return copy_object (sexp);
 }
 
 object *
@@ -279,10 +285,18 @@ eval (object *env, object *sexp)
 
   if (PAIR == sexp->type)
     {
-      return eval_fn (env, sexp);
+      object *new_sexp = NULL;
+      object *tmp;
+      foreach (tmp, sexp)
+        {
+          append (&new_sexp, cons (eval (env, car (tmp)), NULL));
+        }
+      tmp = eval_fn (env, new_sexp);
+      free_object (new_sexp);
+      return tmp;
     }
   else
-    return sexp;
+    return copy_object (sexp);
 }
 
 object *
