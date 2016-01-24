@@ -52,6 +52,7 @@ void println (object *obj);
 
 object *copy_object (object *obj);
 void free_object (object *obj);
+void free_li_with (object *li_with);
 
 int null_p (object *obj);
 int pair_p (object *obj);
@@ -66,11 +67,13 @@ object *lambda (object *args, object *sexp);
 
 #define foreach(ptr, li) for (ptr = li; NULL != ptr; ptr = cdr (ptr))
 void append (object **li, object *obj);
+void replace (object **li, object *li_with);
 size_t length (object *li);
 
 object *init_env ();
 
 object *eval_fn (object *env, object *sexp);
+object *eval_lambda (object *env, object *sexp);
 object *eval (object *env, object *sexp);
 
 object *fn_car (object *env, object *args);
@@ -78,3 +81,5 @@ object *fn_cdr (object *env, object *args);
 object *fn_cons (object *env, object *args);
 object *fn_add (object *env, object *args);
 object *fn_mul (object *env, object *args);
+object *fn_sub (object *env, object *args);
+object *fn_div (object *env, object *args);

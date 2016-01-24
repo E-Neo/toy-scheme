@@ -39,7 +39,13 @@ print (object *obj)
     }
   else if (FUNC == obj->type)
     {
-      printf ("#<procedure>");
+      printf ("#<procedure builtin>");
+    }
+  else if (LAMBDA == obj->type)
+    {
+      printf ("#<procedure lambda ");
+      print (((lambda_object *) obj)->args);
+      printf (">");
     }
   else
     {
@@ -69,6 +75,9 @@ copy_object (object *obj)
     ret = cons (copy_object (car (obj)), copy_object (cdr (obj)));
   else if (FUNC == obj->type)
     ret = func (((func_object *) obj)->fn);
+  else if (LAMBDA == obj->type)
+    ret = lambda (copy_object (((lambda_object *) obj)->args),
+                  copy_object (((lambda_object *) obj)->sexp));
   else
     {
       print_error (ETYPE);
@@ -104,10 +113,28 @@ free_object (object *obj)
     {
       free (obj);
     }
+  else if (LAMBDA == obj->type)
+    {
+      free_object (((lambda_object *) obj)->args);
+      free_object (((lambda_object *) obj)->sexp);
+      free (obj);
+    }
   else
     {
       print_error (ETYPE);
       exit (1);
+    }
+}
+
+void
+free_li_with (object *li_with)
+{
+  object *i, *tmp;
+  for (i = li_with; NULL != i; i = tmp)
+    {
+      tmp = cdr (i);
+      free (car (i));
+      free (i);
     }
 }
 
@@ -248,6 +275,23 @@ append (object **li, object *obj)
   cdr (tmp) = obj;
 }
 
+void
+replace (object **li, object *li_with)
+{
+  object *i, *j;
+  foreach (i, *li)
+    {
+      foreach (j, li_with)
+        {
+          if (car (car (j)) == car (i))
+            {
+              free_object (car (i));
+              car (i) = cdr (car (j));
+            }
+        }
+    }
+}
+
 size_t
 length (object *li)
 {
@@ -272,10 +316,7 @@ eval_fn (object *env, object *sexp)
   object *symbol = car (sexp);
   object *args = cdr (sexp);
 
-  if (FUNC == symbol->type)
-    return (((func_object *) symbol)->fn) (env, args);
-  else
-    return copy_object (sexp);
+  return (((func_object *) symbol)->fn) (env, args);
 }
 
 object *
@@ -340,5 +381,35 @@ fn_mul (object *env, object *args)
     {
       res *= ((number_object *) car (tmp))->num;
     }
+  return number_from_double (res);
+}
+
+object *
+fn_sub (object *env, object *args)
+{
+  double res = ((number_object *) car (args))->num;
+  object *tmp;
+  if (1 == length (args))
+    return number_from_double (-res);
+  else
+    foreach (tmp, cdr (args))
+      {
+        res -= ((number_object *) car (tmp))->num;
+      }
+  return number_from_double (res);
+}
+
+object *
+fn_div (object *env, object *args)
+{
+  double res = ((number_object *) car (args))->num;
+  object *tmp;
+  if (1 == length (args))
+    return number_from_double (1 / res);
+  else
+    foreach (tmp, cdr (args))
+      {
+        res /= ((number_object *) car (tmp))->num;
+      }
   return number_from_double (res);
 }
