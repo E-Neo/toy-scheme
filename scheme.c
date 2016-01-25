@@ -1,3 +1,22 @@
+/* Scheme object manipulation primitives for toy-scheme.
+
+Copyright (C) 2016 E-Neo
+
+This file is part of toy-scheme.
+
+toy-scheme is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+toy-scheme is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with toy-scheme.  If not, see <http://www.gnu.org/licenses/>.  */
+
 #include "scheme.h"
 
 void
@@ -27,6 +46,8 @@ print (object *obj)
 
   if (ATOM == obj->type)
     printf ("%s", ((atom_object *) obj)->name);
+  else if (VARIABLE == obj->type)
+    print (((variable_object *) obj)->value);
   else if (NUMBER == obj->type)
     printf ("%lf", ((number_object *) obj)->num);
   else if (PAIR == obj->type)
@@ -69,6 +90,9 @@ copy_object (object *obj)
     return NULL;
   else if (ATOM == obj->type)
     ret = atom (((atom_object *) obj)->name);
+  else if (VARIABLE == obj->type)
+    ret = variable (((variable_object *) obj)->name,
+                    copy_object (((variable_object *) obj)->value));
   else if (NUMBER == obj->type)
     ret = number_from_double (((number_object *) obj)->num);
   else if (PAIR == obj->type)
@@ -97,6 +121,12 @@ free_object (object *obj)
   else if (ATOM == obj->type)
     {
       free (((atom_object *) obj)->name);
+      free (obj);
+    }
+  else if (VARIABLE == obj->type)
+    {
+      free (((variable_object *) obj)->name);
+      free_object (((variable_object *) obj)->value);
       free (obj);
     }
   else if (NUMBER == obj->type)
@@ -181,6 +211,28 @@ atom (const char *str)
   atom->type = ATOM;
   ((atom_object *) atom)->name = name;
   return atom;
+}
+
+object *
+variable (const char *name, object *value)
+{
+  variable_object *ptr = malloc (sizeof (variable_object));
+  if (NULL == ptr)
+    {
+      print_error (ENOMEM);
+      exit (1);
+    }
+  char *str = malloc (strlen (name) + 1);
+  if (NULL == str)
+    {
+      print_error (ENOMEM);
+      exit (1);
+    }
+  strcpy (str, name);
+  ptr->type = VARIABLE;
+  ptr->name = str;
+  ptr->value = value;
+  return (object *) ptr;
 }
 
 object *
