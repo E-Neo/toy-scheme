@@ -25,7 +25,7 @@ along with toy-scheme.  If not, see <http://www.gnu.org/licenses/>.  */
 
 enum type
   {
-    ATOM, /* Note: This should be removed in the future.  */
+    ATOM, /* Note: Maybe this will be removed in the future.  */
     VARIABLE,
     NUMBER,
     PAIR,
@@ -38,7 +38,8 @@ enum type
 enum error
   {
     ENOMEM,
-    ETYPE
+    ETYPE,
+    ECONFLICT
   };
 
 /* Structure for a scheme object.  */
@@ -113,6 +114,13 @@ void free_li_with (object *li_with);
 int null_p (object *obj);
 int pair_p (object *obj);
 int list_p (object *obj);
+int atom_eqv_p (object *obj1, object *obj2);
+int varible_eqv_p (object *obj1, object *obj2);
+int number_eqv_p (object *obj1, object *obj2);
+int pair_eqv_p (object *obj1, object *obj2);
+int func_eqv_p (object *obj1, object *obj2);
+int lambda_eqv_p (object *obj1, object *obj2);
+int eqv_p (object *obj1, object *obj2);
 
 /* Functions to create objects.
 

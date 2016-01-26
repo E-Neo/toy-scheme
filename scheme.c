@@ -31,6 +31,8 @@ print_error (enum error error)
     case ETYPE:
       fprintf (stderr, "type error.\n");
       break;
+    case ECONFLICT:
+      fprintf (stderr, "conflict error.\n");
     default: fprintf (stderr, "unknown error occurred.\n");
     }
 }
@@ -190,6 +192,80 @@ list_p (object *obj)
   if (NULL == tmp) return 1;
 
   return 0;
+}
+
+int
+atom_eqv_p (object *obj1, object *obj2)
+{
+  return !strcmp (((atom_object *) obj1)->name,
+                  ((atom_object *) obj2)->name);
+}
+
+int
+varible_eqv_p (object *obj1, object *obj2)
+{
+  if (!strcpy (((variable_object *) obj1)->name,
+               ((variable_object *) obj2)->name))
+    {
+      if (eqv_p (((variable_object *) obj1)->value,
+                 ((variable_object *) obj2)->value))
+        {
+          return 1;
+        }
+      else
+        {
+          print_error (ECONFLICT);
+          exit (1);
+        }
+    }
+  else
+    return 0;
+}
+
+int
+number_eqv_p (object *obj1, object *obj2)
+{
+  return ((number_object *) obj1)->num == ((number_object *) obj2)->num ?
+    1 : 0;
+}
+
+int
+pair_eqv_p (object *obj1, object *obj2)
+{
+  return obj1 == obj2 ? 1 : 0;
+}
+
+int
+func_eqv_p (object *obj1, object *obj2)
+{
+  return ((func_object *) obj1)->fn == ((func_object *) obj2)->fn ?
+    1 : 0;
+}
+
+int
+lambda_eqv_p (object *obj1, object *obj2)
+{
+  return obj1 == obj2 ? 1 : 0;
+}
+
+int
+eqv_p (object *obj1, object *obj2)
+{
+  if (obj1 == obj2) return 1;
+  if (NULL == obj1 || NULL == obj2) return 0;
+  if (obj1->type != obj2->type) return 0;
+
+  if (ATOM == obj1->type) return atom_eqv_p (obj1, obj2);
+  else if (VARIABLE == obj1->type) return varible_eqv_p (obj1, obj2);
+  else if (NUMBER == obj1->type) return number_eqv_p (obj1, obj2);
+  else if (PAIR == obj1->type) return pair_eqv_p (obj1, obj2);
+  else if (FUNC == obj1->type) return func_eqv_p (obj1, obj2);
+  else if (LAMBDA == obj1->type) return lambda_eqv_p (obj1, obj2);
+  else
+    {
+      print_error (ETYPE);
+      exit (1);
+    }
 }
 
 object *

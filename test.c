@@ -22,11 +22,11 @@ along with toy-scheme.  If not, see <http://www.gnu.org/licenses/>.  */
 int
 main ()
 {
-  object *old1 = lambda (cons (variable ("x", number ("1")),
+  object *old1 = lambda (cons (atom ("x"),
                                NULL),
                          cons (func (&fn_mul),
-                               cons (variable ("x", number ("1")),
-                                     cons (variable ("x", number ("1")),
+                               cons (atom ("x"),
+                                     cons (atom ("x"),
                                                  NULL))));
   object *old2 = cons (atom ("pi"), number ("3.14159265"));
   object *li = cons (old1,
