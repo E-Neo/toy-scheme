@@ -158,16 +158,30 @@ free_object (object *obj)
     }
 }
 
-void
-free_li_with (object *li_with)
+int
+atom_replace (object **obj, object *old, object *new)
 {
-  object *i, *tmp;
-  for (i = li_with; NULL != i; i = tmp)
+  int count = 0;
+  if (NULL == *obj) return 0;
+  else if (ATOM == (*obj)->type)
     {
-      tmp = cdr (i);
-      free (car (i));
-      free (i);
+      if (!strcmp (((atom_object *) *obj)->name,
+                   ((atom_object *) old)->name))
+        {
+          free_object (*obj);
+          *obj = copy_object (new);
+          count++;
+          return count;
+        }
+      else return 0;
     }
+  else if (PAIR == (*obj)->type)
+    {
+      count += atom_replace (&car (*obj), old, new);
+      count += atom_replace (&cdr (*obj), old, new);
+      return count;
+    }
+  else return 0;
 }
 
 int
@@ -401,23 +415,6 @@ append (object **li, object *obj)
   object *tmp;
   for (tmp = *li; NULL != cdr (tmp); tmp = cdr (tmp));
   cdr (tmp) = obj;
-}
-
-void
-replace (object **li, object *li_with)
-{
-  object *i, *j;
-  foreach (i, *li)
-    {
-      foreach (j, li_with)
-        {
-          if (car (car (j)) == car (i))
-            {
-              free_object (car (i));
-              car (i) = cdr (car (j));
-            }
-        }
-    }
 }
 
 size_t

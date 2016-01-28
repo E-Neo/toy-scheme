@@ -107,7 +107,7 @@ void println (object *obj);
 
 object *copy_object (object *obj);
 void free_object (object *obj);
-void free_li_with (object *li_with);
+int atom_replace (object **obj, object *old, object *new);
 
 /* Return 0 or 1.  */
 
@@ -140,7 +140,6 @@ object *lambda (object *args, object *sexp);
 
 #define foreach(ptr, li) for (ptr = li; NULL != ptr; ptr = cdr (ptr))
 void append (object **li, object *obj);
-void replace (object **li, object *li_with);
 size_t length (object *li);
 
 /* Functions to manipulate scheme environment.  */

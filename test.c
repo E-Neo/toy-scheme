@@ -22,26 +22,34 @@ along with toy-scheme.  If not, see <http://www.gnu.org/licenses/>.  */
 int
 main ()
 {
-  object *old1 = lambda (cons (atom ("x"),
-                               NULL),
-                         cons (func (&fn_mul),
-                               cons (atom ("x"),
-                                     cons (atom ("x"),
-                                                 NULL))));
-  object *old2 = cons (atom ("pi"), number ("3.14159265"));
-  object *li = cons (old1,
-                     cons (number ("1"),
-                           cons (old2,
-                                 NULL)));
-  object *li_with = cons (cons (old1, atom ("a")),
-                          cons (cons (old2, atom ("haha")),
-                                NULL));
-  printf ("old list: ");
-  println (li);
-  replace (&li, li_with);
-  printf ("new list: ");
-  println (li);
-  free_object (li);
-  free_li_with (li_with);
+  object *env = init_env ();
+  object *args = cons (atom ("x"),
+                       cons (atom ("y"),
+                             NULL));
+  object *sexp = cons (func (&fn_add),
+                       cons (atom ("x"),
+                             cons (atom ("y"),
+                                   NULL)));
+  object *obj = lambda (args, sexp);
+
+  object *new1 = number ("1");
+  object *new2 = number ("2");
+  object *ans;
+
+  println (sexp);
+  atom_replace (&sexp, car (args), new1);
+  atom_replace (&sexp, car (cdr (args)), new2);
+  println (sexp);
+
+  /* ((lambda (x y) (+ x y)) 1 2) => 3 */
+  ans = eval (env, sexp);
+  println (ans);
+  free_object (ans);
+
+  free_object (obj);
+  free_object (new1);
+  free_object (new2);
+  free_object (env);
+
   return 0;
 }
