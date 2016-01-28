@@ -445,22 +445,72 @@ eval_fn (object *env, object *sexp)
 }
 
 object *
+eval_lambda (object *env, object *sexp)
+{
+  object *lamb = car (sexp);
+  object *args = cdr (sexp);
+  object *obj = copy_object (((lambda_object *) lamb)->sexp);
+  object *i, *j;
+  object *ret;
+  for (i = ((lambda_object *) lamb)->args, j = args;
+       NULL != i;
+       i = cdr (i), j = cdr (j))
+    {
+      atom_replace (&obj, car (i), car (j));
+    }
+  ret = eval (env, obj);
+  free_object (obj);
+  return ret;
+}
+
+object *
 eval (object *env, object *sexp)
 {
-  if (NULL == sexp) return NULL;
-
-  if (PAIR == sexp->type)
+  if (NULL == sexp)
+    return NULL;
+  else if (ATOM == sexp->type)
+    return copy_object (sexp);
+  else if (VARIABLE == sexp->type)
+    return eval (env, ((variable_object *) sexp)->value);
+  else if (NUMBER == sexp->type)
+    return copy_object (sexp);
+  else if (PAIR == sexp->type)
     {
       object *new_sexp = NULL;
       object *tmp;
-      foreach (tmp, sexp)
+      if (FUNC == (car (sexp))->type)
         {
-          append (&new_sexp, cons (eval (env, car (tmp)), NULL));
+          foreach (tmp, sexp)
+            {
+              append (&new_sexp, cons (eval (env, car (tmp)), NULL));
+            }
+          tmp = eval_fn (env, new_sexp);
+          free_object (new_sexp);
+          return tmp;
         }
-      tmp = eval_fn (env, new_sexp);
-      free_object (new_sexp);
-      return tmp;
+      else if (LAMBDA == (car (sexp))->type)
+        {
+          foreach (tmp, sexp)
+            {
+              append (&new_sexp, cons (eval (env, car (tmp)), NULL));
+            }
+          tmp = eval_lambda (env, new_sexp);
+          free_object (new_sexp);
+          return tmp;
+        }
+      else
+        /* Warning: Under this condition, it should return a ERROR object.
+           However there isn't a error_object by far.  */
+        {
+          printf ("ERROR: Wrong type to apply: ");
+          println (car (sexp));
+          exit (1);
+        }
     }
+  else if (FUNC == sexp->type)
+    return copy_object (sexp);
+  else if (LAMBDA == sexp->type)
+    return copy_object (sexp);
   else
     return copy_object (sexp);
 }

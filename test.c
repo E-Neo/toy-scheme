@@ -23,33 +23,56 @@ int
 main ()
 {
   object *env = init_env ();
-  object *args = cons (atom ("x"),
-                       cons (atom ("y"),
-                             NULL));
-  object *sexp = cons (func (&fn_add),
-                       cons (atom ("x"),
-                             cons (atom ("y"),
-                                   NULL)));
-  object *obj = lambda (args, sexp);
+  object *ans = NULL;
+  object *sexp = NULL;
 
-  object *new1 = number ("1");
-  object *new2 = number ("2");
-  object *ans;
-
-  println (sexp);
-  atom_replace (&sexp, car (args), new1);
-  atom_replace (&sexp, car (cdr (args)), new2);
-  println (sexp);
-
-  /* ((lambda (x y) (+ x y)) 1 2) => 3 */
+  /* 3.14 => 3.14 */
+  printf ("> 3.14\n");
+  sexp = number ("3.14");
   ans = eval (env, sexp);
   println (ans);
+  free_object (sexp);
   free_object (ans);
 
-  free_object (obj);
-  free_object (new1);
-  free_object (new2);
-  free_object (env);
+  /* (+ 1 (- 6 4) (/ 81 (* 3 3 3))) => 6 */
+  printf ("> (+ 1 (- 6 4) (/ 81 (* 3 3 3)))\n");
+  sexp = cons (func (&fn_add),
+               cons (number ("1"),
+                     cons (cons (func (&fn_sub),
+                                 cons (number ("6"),
+                                       cons (number ("4"),
+                                             NULL))),
+                           (cons (cons (func (&fn_div),
+                                        cons (number ("81"),
+                                              cons (cons (func (&fn_mul),
+                                                          cons (number ("3"),
+                                                                cons (number ("3"),
+                                                                      cons (number ("3"),
+                                                                            NULL)))),
+                                                    NULL))),
+                                  NULL)))));
+  ans = eval (env, sexp);
+  println (ans);
+  free_object (sexp);
+  free_object (ans);
 
+  /* ((lambda (x y) (+ x y)) 1 2) => 3 */
+  printf ("> ((lambda (x y) (+ x y)) 1 2)\n");
+  sexp = cons (lambda (cons (atom ("x"),
+                             cons (atom ("y"),
+                                   NULL)),
+                       cons (func (&fn_add),
+                             cons (atom ("x"),
+                                   cons (atom ("y"),
+                                         NULL)))),
+               cons (number ("1"),
+                     cons (number ("2"),
+                           NULL)));
+  ans = eval (env, sexp);
+  println (ans);
+  free_object (sexp);
+  free_object (ans);
+
+  free_object (env);
   return 0;
 }
