@@ -369,7 +369,7 @@ cons (object *obj1, object *obj2)
 }
 
 object *
-func (object * (*fn) (object *, object *))
+func (object * (*fn) (object **, object *))
 {
   func_object *ptr = malloc (sizeof (func_object));
   if (NULL == ptr)
@@ -430,13 +430,36 @@ object *
 init_env ()
 {
   object *env = NULL;
-  append (&env, cons (cons (atom ("car"), func (&fn_car)), NULL));
-  append (&env, cons (cons (atom ("cdr"), func (&fn_cdr)), NULL));
+  append (&env, cons (variable ("define", func (&fn_define)), NULL));
+  append (&env, cons (variable ("cons", func (&fn_cons)), NULL));
+  append (&env, cons (variable ("car", func (&fn_car)), NULL));
+  append (&env, cons (variable ("cdr", func (&fn_cdr)), NULL));
+  append (&env, cons (variable ("+", func (&fn_add)), NULL));
+  append (&env, cons (variable ("*", func (&fn_mul)), NULL));
+  append (&env, cons (variable ("-", func (&fn_sub)), NULL));
+  append (&env, cons (variable ("/", func (&fn_div)), NULL));
   return env;
 }
 
+void
+env_append (object **env, object *var)
+{
+  object *i;
+  foreach (i, *env)
+    {
+      if (!strcmp (((variable_object *) (car (i)))->name,
+                   ((variable_object *) var)->name))
+        {
+          free_object (car (i));
+          car (i) = var;
+          return;
+        }
+    }
+  append (env, cons (var, NULL));
+}
+
 object *
-eval_fn (object *env, object *sexp)
+eval_fn (object **env, object *sexp)
 {
   object *symbol = car (sexp);
   object *args = cdr (sexp);
@@ -445,7 +468,7 @@ eval_fn (object *env, object *sexp)
 }
 
 object *
-eval_lambda (object *env, object *sexp)
+eval_lambda (object **env, object *sexp)
 {
   object *lamb = car (sexp);
   object *args = cdr (sexp);
@@ -464,7 +487,7 @@ eval_lambda (object *env, object *sexp)
 }
 
 object *
-eval (object *env, object *sexp)
+eval (object **env, object *sexp)
 {
   if (NULL == sexp)
     return NULL;
@@ -478,22 +501,18 @@ eval (object *env, object *sexp)
     {
       object *new_sexp = NULL;
       object *tmp;
-      if (FUNC == (car (sexp))->type)
+      foreach (tmp, sexp)
         {
-          foreach (tmp, sexp)
-            {
-              append (&new_sexp, cons (eval (env, car (tmp)), NULL));
-            }
+          append (&new_sexp, cons (eval (env, car (tmp)), NULL));
+        }
+      if (FUNC == (car (new_sexp))->type)
+        {
           tmp = eval_fn (env, new_sexp);
           free_object (new_sexp);
           return tmp;
         }
-      else if (LAMBDA == (car (sexp))->type)
+      else if (LAMBDA == (car (new_sexp))->type)
         {
-          foreach (tmp, sexp)
-            {
-              append (&new_sexp, cons (eval (env, car (tmp)), NULL));
-            }
           tmp = eval_lambda (env, new_sexp);
           free_object (new_sexp);
           return tmp;
@@ -516,19 +535,17 @@ eval (object *env, object *sexp)
 }
 
 object *
-fn_car (object *env, object *args)
+fn_define (object **env, object *args)
 {
-  return copy_object (car (car (args)));
+  object *value = eval (env, car (cdr (args)));
+  env_append (env, variable (((atom_object *) car (args))->name, value));
+
+  /* Note: Maybe I should define an object called void_object.   */
+  return atom ("void");
 }
 
 object *
-fn_cdr (object *env, object *args)
-{
-  return copy_object (cdr (car (args)));
-}
-
-object *
-fn_cons (object *env, object *args)
+fn_cons (object **env, object *args)
 {
   object *obj1 = car (args);
   object *obj2 = car (cdr (args));
@@ -536,7 +553,19 @@ fn_cons (object *env, object *args)
 }
 
 object *
-fn_add (object *env, object *args)
+fn_car (object **env, object *args)
+{
+  return copy_object (car (car (args)));
+}
+
+object *
+fn_cdr (object **env, object *args)
+{
+  return copy_object (cdr (car (args)));
+}
+
+object *
+fn_add (object **env, object *args)
 {
   double res = 0.0;
   object *tmp;
@@ -548,7 +577,7 @@ fn_add (object *env, object *args)
 }
 
 object *
-fn_mul (object *env, object *args)
+fn_mul (object **env, object *args)
 {
   double res = 1.0;
   object *tmp;
@@ -560,7 +589,7 @@ fn_mul (object *env, object *args)
 }
 
 object *
-fn_sub (object *env, object *args)
+fn_sub (object **env, object *args)
 {
   double res = ((number_object *) car (args))->num;
   object *tmp;
@@ -575,7 +604,7 @@ fn_sub (object *env, object *args)
 }
 
 object *
-fn_div (object *env, object *args)
+fn_div (object **env, object *args)
 {
   double res = ((number_object *) car (args))->num;
   object *tmp;

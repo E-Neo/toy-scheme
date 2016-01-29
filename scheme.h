@@ -82,7 +82,7 @@ typedef struct
 typedef struct
 {
   enum type type;
-  object * (*fn) (object *, object *);
+  object * (*fn) (object **, object *);
 } func_object;
 
 typedef struct
@@ -133,7 +133,7 @@ object *variable (const char *name, object *value);
 object *number (const char *str);
 object *number_from_double (double x);
 object *cons (object *obj1, object *obj2);
-object *func (object * (*fn) (object *, object *));
+object *func (object * (*fn) (object **, object *));
 object *lambda (object *args, object *sexp);
 
 /* Some low level functions to manipulate list object.  */
@@ -146,18 +146,25 @@ size_t length (object *li);
 
 object *init_env ();
 
+/* If there exists a variable with the same name as VAR in env,
+   the old variable will be replaced with the new VAR.
+   Warning: VAR will NOT be copied by this function.  */
+
+void env_append (object **env, object *var);
+
 /* Evaluate s-expressions.  */
 
-object *eval_fn (object *env, object *sexp);
-object *eval_lambda (object *env, object *sexp);
-object *eval (object *env, object *sexp);
+object *eval_fn (object **env, object *sexp);
+object *eval_lambda (object **env, object *sexp);
+object *eval (object **env, object *sexp);
 
 /* Builtin functions.  */
 
-object *fn_car (object *env, object *args);
-object *fn_cdr (object *env, object *args);
-object *fn_cons (object *env, object *args);
-object *fn_add (object *env, object *args);
-object *fn_mul (object *env, object *args);
-object *fn_sub (object *env, object *args);
-object *fn_div (object *env, object *args);
+object *fn_define (object **env, object *args);
+object *fn_cons (object **env, object *args);
+object *fn_car (object **env, object *args);
+object *fn_cdr (object **env, object *args);
+object *fn_add (object **env, object *args);
+object *fn_mul (object **env, object *args);
+object *fn_sub (object **env, object *args);
+object *fn_div (object **env, object *args);

@@ -29,7 +29,7 @@ main ()
   /* 3.14 => 3.14 */
   printf ("> 3.14\n");
   sexp = number ("3.14");
-  ans = eval (env, sexp);
+  ans = eval (&env, sexp);
   println (ans);
   free_object (sexp);
   free_object (ans);
@@ -51,7 +51,7 @@ main ()
                                                                             NULL)))),
                                                     NULL))),
                                   NULL)))));
-  ans = eval (env, sexp);
+  ans = eval (&env, sexp);
   println (ans);
   free_object (sexp);
   free_object (ans);
@@ -68,10 +68,46 @@ main ()
                cons (number ("1"),
                      cons (number ("2"),
                            NULL)));
-  ans = eval (env, sexp);
+  ans = eval (&env, sexp);
   println (ans);
   free_object (sexp);
   free_object (ans);
+
+  /* (cons 1 2) => (1.2) */
+  printf ("> (cons 1 2)\n");
+  sexp = cons (func (&fn_cons),
+               cons (number ("1"),
+                     cons (number ("2"),
+                           NULL)));
+  ans = eval (&env, sexp);
+  println (ans);
+  free_object (sexp);
+  free_object (ans);
+
+  /* (define square (lambda (x) (* x x))) */
+  printf ("> (define square (lambda (x) (* x x)))\n");
+  sexp = cons (func (&fn_define),
+               cons (atom ("square"),
+                     cons (lambda (cons (atom ("x"),
+                                         NULL),
+                                   cons (func (&fn_mul),
+                                         cons (atom ("x"),
+                                               cons (atom ("x"),
+                                                     NULL)))),
+                           NULL)));
+
+  ans = eval (&env, sexp);
+  println (ans);
+  free_object (sexp);
+  free_object (ans);
+
+  object *i;
+  printf ("Environment list:\n");
+  foreach (i, env)
+    {
+      printf ("%s: ", ((variable_object *) car (i))->name);
+      println (((variable_object *) car (i))->value);
+    }
 
   free_object (env);
   return 0;
