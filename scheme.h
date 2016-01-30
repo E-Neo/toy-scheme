@@ -25,7 +25,8 @@ along with toy-scheme.  If not, see <http://www.gnu.org/licenses/>.  */
 
 enum type
   {
-    ATOM, /* Note: Maybe this will be removed in the future.  */
+    ATOM,
+    BOOL,
     VARIABLE,
     NUMBER,
     PAIR,
@@ -58,6 +59,12 @@ typedef struct
   enum type type;
   char *name;
 } atom_object;
+
+typedef struct
+{
+  enum type type;
+  char value;
+} bool_object;
 
 typedef struct
 {
@@ -129,6 +136,7 @@ int eqv_p (object *obj1, object *obj2);
    to avoid troubles.  */
 
 object *atom (const char *str);
+object *bool (char x);
 object *variable (const char *name, object *value);
 object *number (const char *str);
 object *number_from_double (double x);
@@ -160,11 +168,14 @@ object *eval (object **env, object *sexp);
 
 /* Builtin functions.  */
 
-object *fn_define (object **env, object *args);
-object *fn_cons (object **env, object *args);
-object *fn_car (object **env, object *args);
-object *fn_cdr (object **env, object *args);
-object *fn_add (object **env, object *args);
-object *fn_mul (object **env, object *args);
-object *fn_sub (object **env, object *args);
-object *fn_div (object **env, object *args);
+object *fn_define (object **env, object *args); /* define */
+object *fn_cons (object **env, object *args); /* cons */
+object *fn_car (object **env, object *args); /* car */
+object *fn_cdr (object **env, object *args); /* cdr */
+object *fn_add (object **env, object *args); /* + */
+object *fn_mul (object **env, object *args); /* * */
+object *fn_sub (object **env, object *args); /* - */
+object *fn_div (object **env, object *args); /* / */
+object *fn_lt (object **env, object *args); /* < */
+object *fn_gt (object **env, object *args); /* > */
+object *fn_if (object **env, object *args); /* if */

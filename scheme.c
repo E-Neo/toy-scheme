@@ -48,6 +48,8 @@ print (object *obj)
 
   if (ATOM == obj->type)
     printf ("%s", ((atom_object *) obj)->name);
+  else if (BOOL == obj->type)
+    printf ("%s", ((bool_object *) obj)->value ? "#t" : "#f");
   else if (VARIABLE == obj->type)
     print (((variable_object *) obj)->value);
   else if (NUMBER == obj->type)
@@ -92,6 +94,8 @@ copy_object (object *obj)
     return NULL;
   else if (ATOM == obj->type)
     ret = atom (((atom_object *) obj)->name);
+  else if (BOOL == obj->type)
+    ret = bool (((bool_object *) obj)->value);
   else if (VARIABLE == obj->type)
     ret = variable (((variable_object *) obj)->name,
                     copy_object (((variable_object *) obj)->value));
@@ -123,6 +127,10 @@ free_object (object *obj)
   else if (ATOM == obj->type)
     {
       free (((atom_object *) obj)->name);
+      free (obj);
+    }
+  else if (BOOL == obj->type)
+    {
       free (obj);
     }
   else if (VARIABLE == obj->type)
@@ -304,6 +312,20 @@ atom (const char *str)
 }
 
 object *
+bool (char x)
+{
+  bool_object *ptr = malloc (sizeof (bool_object));
+  if (NULL == ptr)
+    {
+      print_error (ENOMEM);
+      exit (1);
+    }
+  ptr->type = BOOL;
+  ptr->value = x ? 1 : 0;
+  return (object *) ptr;
+}
+
+object *
 variable (const char *name, object *value)
 {
   variable_object *ptr = malloc (sizeof (variable_object));
@@ -430,6 +452,7 @@ object *
 init_env ()
 {
   object *env = NULL;
+  /* Warning: Using append here will waste time.  */
   append (&env, cons (variable ("define", func (&fn_define)), NULL));
   append (&env, cons (variable ("cons", func (&fn_cons)), NULL));
   append (&env, cons (variable ("car", func (&fn_car)), NULL));
@@ -438,6 +461,9 @@ init_env ()
   append (&env, cons (variable ("*", func (&fn_mul)), NULL));
   append (&env, cons (variable ("-", func (&fn_sub)), NULL));
   append (&env, cons (variable ("/", func (&fn_div)), NULL));
+  append (&env, cons (variable ("<", func (&fn_lt)), NULL));
+  append (&env, cons (variable (">", func (&fn_gt)), NULL));
+  append (&env, cons (variable ("if", func (&fn_if)), NULL));
   return env;
 }
 
@@ -493,6 +519,8 @@ eval (object **env, object *sexp)
     return NULL;
   else if (ATOM == sexp->type)
     return copy_object (sexp);
+  else if (BOOL == sexp->type)
+    return copy_object (sexp);
   else if (VARIABLE == sexp->type)
     return eval (env, ((variable_object *) sexp)->value);
   else if (NUMBER == sexp->type)
@@ -537,12 +565,15 @@ eval (object **env, object *sexp)
 object *
 fn_define (object **env, object *args)
 {
-  object *value = eval (env, car (cdr (args)));
+  object *value = copy_object (car (cdr (args)));
   env_append (env, variable (((atom_object *) car (args))->name, value));
 
   /* Note: Maybe I should define an object called void_object.   */
   return atom ("void");
 }
+
+/* Warning: These function should check the parameters.
+   TODO: Add error handlers.  */
 
 object *
 fn_cons (object **env, object *args)
@@ -616,4 +647,50 @@ fn_div (object **env, object *args)
         res /= ((number_object *) car (tmp))->num;
       }
   return number_from_double (res);
+}
+
+object *
+fn_lt (object **env, object *args)
+{
+  if (1 >= length (args))
+    return bool (1);
+  else
+    {
+      double x = ((number_object *) car (args))->num;
+      object *i;
+      foreach (i, cdr (args))
+        {
+          if (x > ((number_object *) car (i))->num)
+            return bool (0);
+          x = ((number_object *) car (i))->num;
+        }
+    }
+  return bool (1);
+}
+
+object *
+fn_gt (object **env, object *args)
+{
+  if (1 >= length (args))
+    return bool (1);
+  else
+    {
+      double x = ((number_object *) car (args))->num;
+      object *i;
+      foreach (i, cdr (args))
+        {
+          if (x < ((number_object *) car (i))->num)
+            return bool (0);
+          x = ((number_object *) car (i))->num;
+        }
+    }
+  return bool (1);
+}
+
+object *
+fn_if (object **env, object *args)
+{
+  if (((bool_object *) car (args))->value)
+    return copy_object (car (cdr (args)));
+  else return copy_object (car (cdr (cdr (args))));
 }

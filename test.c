@@ -95,7 +95,27 @@ main ()
                                                cons (atom ("x"),
                                                      NULL)))),
                            NULL)));
+  ans = eval (&env, sexp);
+  println (ans);
+  free_object (sexp);
+  free_object (ans);
 
+  /* ((lambda (x) (if (< x 0) (- x) x)) -10) */
+  printf ("> ((lambda (x) (if (< x 0) (- x) x)) -10)\n");
+  sexp = cons (lambda (cons (atom ("x"),
+                             NULL),
+                       cons (func (&fn_if),
+                             cons (cons (func (&fn_lt),
+                                         cons (atom ("x"),
+                                               cons (number ("0"),
+                                                     NULL))),
+                                   cons (cons (func (&fn_sub),
+                                               cons (atom ("x"),
+                                                     NULL)),
+                                         cons (atom ("x"),
+                                               NULL))))),
+               cons (number ("-10"),
+                     NULL));
   ans = eval (&env, sexp);
   println (ans);
   free_object (sexp);
