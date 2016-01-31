@@ -73,7 +73,7 @@ main ()
   free_object (sexp);
   free_object (ans);
 
-  /* (cons 1 2) => (1.2) */
+  /* (cons 1 2) => (1 . 2) */
   printf ("> (cons 1 2)\n");
   sexp = cons (func (&fn_cons),
                cons (number ("1"),
@@ -100,7 +100,53 @@ main ()
   free_object (sexp);
   free_object (ans);
 
-  /* ((lambda (x) (if (< x 0) (- x) x)) -10) */
+  /* (square 8) => 64 */
+  printf ("> (square 8)\n");
+  sexp = cons (atom ("square"),
+               cons (number ("8"),
+                     NULL));
+  ans = eval (&env, sexp);
+  println (ans);
+  free_object (sexp);
+  free_object (ans);
+
+  /* (define new_square square) */
+  printf ("> (define new_square square)\n");
+  sexp = cons (func (&fn_define),
+               cons (atom ("new_square"),
+                     cons (atom ("square"),
+                           NULL)));
+  ans = eval (&env, sexp);
+  println (ans);
+  free_object (sexp);
+  free_object (ans);
+
+  /* (define new_square (lambda (x) (square x))) */
+  printf ("> (define new_square (lambda (x) (square x)))\n");
+  sexp = cons (func (&fn_define),
+               cons (atom ("new_square"),
+                     cons (lambda (cons (atom ("x"),
+                                         NULL),
+                                   cons (atom ("square"),
+                                         cons (atom ("x"),
+                                               NULL))),
+                           NULL)));
+  ans = eval (&env, sexp);
+  println (ans);
+  free_object (sexp);
+  free_object (ans);
+
+  /* (new_square 9) => 81 */
+  printf ("> (new_square 9)\n");
+  sexp = cons (atom ("new_square"),
+               cons (number ("9"),
+                     NULL));
+  ans = eval (&env, sexp);
+  println (ans);
+  free_object (sexp);
+  free_object (ans);
+
+  /* ((lambda (x) (if (< x 0) (- x) x)) -10) => 10 */
   printf ("> ((lambda (x) (if (< x 0) (- x) x)) -10)\n");
   sexp = cons (lambda (cons (atom ("x"),
                              NULL),

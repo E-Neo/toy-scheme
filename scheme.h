@@ -154,6 +154,8 @@ size_t length (object *li);
 
 object *init_env ();
 
+object *env_search (object **env, object *at);
+
 /* If there exists a variable with the same name as VAR in env,
    the old variable will be replaced with the new VAR.
    Warning: VAR will NOT be copied by this function.  */
@@ -164,6 +166,7 @@ void env_append (object **env, object *var);
 
 object *eval_fn (object **env, object *sexp);
 object *eval_lambda (object **env, object *sexp);
+object *eval_pair (object **env, object *sexp);
 object *eval (object **env, object *sexp);
 
 /* Builtin functions.  */

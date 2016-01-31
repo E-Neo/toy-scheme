@@ -467,13 +467,33 @@ init_env ()
   return env;
 }
 
+object *
+env_search (object **env, object *at)
+{
+  object *i;
+  foreach (i, *env)
+    {
+      if (!strcmp (((atom_object *) at)->name,
+                   ((variable_object *) car (i))->name))
+        {
+          return copy_object (((variable_object *) car (i))->value);
+        }
+    }
+
+  /* Warning: Under this condition, it should return a ERROR object.
+     However there isn't a error_object by far.  */
+  printf ("ERROR: Unbound variable: ");
+  println (at);
+  exit (1);
+}
+
 void
 env_append (object **env, object *var)
 {
   object *i;
   foreach (i, *env)
     {
-      if (!strcmp (((variable_object *) (car (i)))->name,
+      if (!strcmp (((variable_object *) car (i))->name,
                    ((variable_object *) var)->name))
         {
           free_object (car (i));
@@ -513,6 +533,46 @@ eval_lambda (object **env, object *sexp)
 }
 
 object *
+eval_pair (object **env, object *sexp)
+{
+  object *new_sexp = NULL;
+  object *tmp;
+  foreach (tmp, sexp)
+    {
+      append (&new_sexp, cons (eval (env, car (tmp)), NULL));
+    }
+  if (ATOM == (car (new_sexp))->type)
+    {
+      tmp = car (new_sexp);
+      car (new_sexp) = env_search (env, tmp);
+      free_object (tmp);
+      tmp = eval (env, new_sexp);
+      free_object (new_sexp);
+      return tmp;
+    }
+  else if (FUNC == (car (new_sexp))->type)
+    {
+      tmp = eval_fn (env, new_sexp);
+      free_object (new_sexp);
+      return tmp;
+    }
+  else if (LAMBDA == (car (new_sexp))->type)
+    {
+      tmp = eval_lambda (env, new_sexp);
+      free_object (new_sexp);
+      return tmp;
+    }
+  else
+    /* Warning: Under this condition, it should return a ERROR object.
+       However there isn't a error_object by far.  */
+    {
+      printf ("ERROR: Wrong type to apply: ");
+      println (car (sexp));
+      exit (1);
+    }
+}
+
+object *
 eval (object **env, object *sexp)
 {
   if (NULL == sexp)
@@ -526,40 +586,16 @@ eval (object **env, object *sexp)
   else if (NUMBER == sexp->type)
     return copy_object (sexp);
   else if (PAIR == sexp->type)
-    {
-      object *new_sexp = NULL;
-      object *tmp;
-      foreach (tmp, sexp)
-        {
-          append (&new_sexp, cons (eval (env, car (tmp)), NULL));
-        }
-      if (FUNC == (car (new_sexp))->type)
-        {
-          tmp = eval_fn (env, new_sexp);
-          free_object (new_sexp);
-          return tmp;
-        }
-      else if (LAMBDA == (car (new_sexp))->type)
-        {
-          tmp = eval_lambda (env, new_sexp);
-          free_object (new_sexp);
-          return tmp;
-        }
-      else
-        /* Warning: Under this condition, it should return a ERROR object.
-           However there isn't a error_object by far.  */
-        {
-          printf ("ERROR: Wrong type to apply: ");
-          println (car (sexp));
-          exit (1);
-        }
-    }
+    return eval_pair (env, sexp);
   else if (FUNC == sexp->type)
     return copy_object (sexp);
   else if (LAMBDA == sexp->type)
     return copy_object (sexp);
   else
-    return copy_object (sexp);
+    {
+      print_error (ETYPE);
+      exit (1);
+    }
 }
 
 object *
