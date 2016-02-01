@@ -136,6 +136,44 @@ main ()
   free_object (sexp);
   free_object (ans);
 
+  /* (define factorial (lambda (n) (if (< n 1) 1 (* n (factorial (- n 1)))))) */
+  printf ("> (define factorial (lambda (n) (if (< n 1) 1 (* n (factorial (- n 1))))))\n");
+  sexp = cons (func (&fn_define),
+               cons (atom ("factorial"),
+                     cons (lambda (cons (atom ("n"),
+                                         NULL),
+                                   cons (func (&fn_if),
+                                         cons (cons (func (&fn_lt),
+                                                     cons (atom ("n"),
+                                                           cons (number ("1"),
+                                                                 NULL))),
+                                               cons (number ("1"),
+                                                     cons (cons (func (&fn_mul),
+                                                                 cons (atom ("n"),
+                                                                       cons (cons (atom ("factorial"),
+                                                                                   cons (cons (func (&fn_sub),
+                                                                                               cons (atom ("n"),
+                                                                                                     cons (number ("1"),
+                                                                                                           NULL))),
+                                                                                         NULL)),
+                                                                             NULL))),
+                                                           NULL))))),
+                           NULL)));
+  ans = eval (&env, sexp);
+  println (ans);
+  free_object (sexp);
+  free_object (ans);
+
+  /* (factorial 3) => 6
+  printf ("> (factorial 3)\n");
+  sexp = cons (atom ("factorial"),
+               cons (number ("3"),
+                     NULL));
+  ans = eval (&env, sexp);
+  println (ans);
+  free_object (sexp);
+  free_object (ans);*/
+
   /* (new_square 9) => 81 */
   printf ("> (new_square 9)\n");
   sexp = cons (atom ("new_square"),

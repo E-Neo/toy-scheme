@@ -601,8 +601,17 @@ eval (object **env, object *sexp)
 object *
 fn_define (object **env, object *args)
 {
-  object *value = copy_object (car (cdr (args)));
-  env_append (env, variable (((atom_object *) car (args))->name, value));
+  object *value;
+  if (ATOM == (car (cdr (args)))->type)
+    {
+      value = env_search (env, car (cdr (args)));
+      env_append (env, variable (((atom_object *) car (args))->name, value));
+    }
+  else
+    {
+      value = eval (env, car (cdr (args)));
+      env_append (env, variable (((atom_object *) car (args))->name, value));
+    }
 
   /* Note: Maybe I should define an object called void_object.   */
   return atom ("void");
