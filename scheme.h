@@ -25,6 +25,8 @@ along with toy-scheme.  If not, see <http://www.gnu.org/licenses/>.  */
 
 enum type
   {
+    VOID,
+    ERROR,
     ATOM,
     BOOL,
     VARIABLE,
@@ -38,9 +40,11 @@ enum type
 
 enum error
   {
-    ENOMEM,
-    ETYPE,
-    ECONFLICT
+    ENOMEM, /* Malloc error, don't have enough memory.  */
+    ETYPE, /* Wrong type.  */
+    ECONFLICT, /* Conflict error.  */
+    EARGNUM, /* Wrong number of arguments.  */
+    EUNBOUND /* Unbound variable.  */
   };
 
 /* Structure for a scheme object.  */
@@ -53,6 +57,18 @@ typedef struct
 /* Structures for different scheme objects.
    The previous object is supertype
    and the following objects are subtypes.   */
+
+typedef struct
+{
+  enum type type;
+} void_object;
+
+typedef struct
+{
+  enum type type;
+  enum error error;
+  char *msg;
+} error_object;
 
 typedef struct
 {
@@ -135,6 +151,8 @@ int eqv_p (object *obj1, object *obj2);
    Sometimes you should copy the objects before passing them to these functions
    to avoid troubles.  */
 
+object *SCM_void ();
+object *SCM_error (enum error x, const char *str);
 object *atom (const char *str);
 object *bool (char x);
 object *variable (const char *name, object *value);

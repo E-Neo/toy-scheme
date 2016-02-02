@@ -205,6 +205,17 @@ main ()
   free_object (sexp);
   free_object (ans);
 
+  /* (define x unbound) */
+  printf ("> (define x unbound)\n");
+  sexp = cons (func (&fn_define),
+               cons (atom ("x"),
+                     cons (atom ("unbound"),
+                           NULL)));
+  ans = eval (&env, sexp);
+  println (ans);
+  free_object (sexp);
+  free_object (ans);
+
   object *i;
   printf ("Environment list:\n");
   foreach (i, env)
