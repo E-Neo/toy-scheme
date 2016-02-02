@@ -612,12 +612,10 @@ eval_pair (object **env, object *sexp)
       return tmp;
     }
   else
-    /* Warning: Under this condition, it should return a ERROR object.
-       However there isn't a error_object by far.  */
     {
-      printf ("ERROR: Wrong type to apply: ");
-      println (car (sexp));
-      exit (1);
+      tmp = SCM_error (ETYPE, "Wrong type to apply.");
+      free_object (new_sexp);
+      return tmp;
     }
 }
 
@@ -647,8 +645,7 @@ eval (object **env, object *sexp)
     }
 }
 
-/* Warning: These function should check the parameters.
-   TODO: Add error handlers.  */
+/* Builtin functions.  */
 
 object *
 fn_define (object **env, object *args)

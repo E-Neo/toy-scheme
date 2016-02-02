@@ -216,6 +216,17 @@ main ()
   free_object (sexp);
   free_object (ans);
 
+  /* (1 2 3) */
+  printf ("> (1 2 3)\n");
+  sexp = cons (number ("1"),
+               cons (number ("2"),
+                     cons (number ("3"),
+                           NULL)));
+  ans = eval (&env, sexp);
+  println (ans);
+  free_object (sexp);
+  free_object (ans);
+
   object *i;
   printf ("Environment list:\n");
   foreach (i, env)
