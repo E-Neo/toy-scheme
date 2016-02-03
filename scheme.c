@@ -46,18 +46,20 @@ print (object *obj)
       return;
     }
 
-  if (VOID == obj->type);
-  else if (ERROR == obj->type)
+  if (SCM_VOID == obj->type);
+  else if (SCM_ERROR == obj->type)
     printf ("ERROR: %s", ((error_object *) obj)->msg);
-  else if (ATOM == obj->type)
+  else if (SCM_ATOM == obj->type)
     printf ("%s", ((atom_object *) obj)->name);
-  else if (BOOL == obj->type)
+  else if (SCM_BOOL == obj->type)
     printf ("%s", ((bool_object *) obj)->value ? "#t" : "#f");
-  else if (VARIABLE == obj->type)
+  else if (SCM_VARIABLE == obj->type)
     print (((variable_object *) obj)->value);
-  else if (NUMBER == obj->type)
+  else if (SCM_NUMBER == obj->type)
     printf ("%lf", ((number_object *) obj)->num);
-  else if (PAIR == obj->type)
+  else if (SCM_STRING == obj->type)
+    printf ("\"%s\"", ((string_object *) obj)->str);
+  else if (SCM_PAIR == obj->type)
     {
       printf ("(");
       print (car (obj));
@@ -65,11 +67,11 @@ print (object *obj)
       print (cdr (obj));
       printf (")");
     }
-  else if (FUNC == obj->type)
+  else if (SCM_FUNC == obj->type)
     {
       printf ("#<procedure builtin>");
     }
-  else if (LAMBDA == obj->type)
+  else if (SCM_LAMBDA == obj->type)
     {
       printf ("#<procedure lambda ");
       print (((lambda_object *) obj)->args);
@@ -95,25 +97,27 @@ copy_object (object *obj)
   object *ret = NULL;
   if (NULL == obj)
     return NULL;
-  else if (VOID == obj->type)
+  else if (SCM_VOID == obj->type)
     ret = SCM_void ();
-  else if (ERROR == obj->type)
+  else if (SCM_ERROR == obj->type)
     ret = SCM_error (((error_object *) obj)->error,
                      ((error_object *) obj)->msg);
-  else if (ATOM == obj->type)
+  else if (SCM_ATOM == obj->type)
     ret = atom (((atom_object *) obj)->name);
-  else if (BOOL == obj->type)
+  else if (SCM_BOOL == obj->type)
     ret = bool (((bool_object *) obj)->value);
-  else if (VARIABLE == obj->type)
+  else if (SCM_VARIABLE == obj->type)
     ret = variable (((variable_object *) obj)->name,
                     copy_object (((variable_object *) obj)->value));
-  else if (NUMBER == obj->type)
+  else if (SCM_NUMBER == obj->type)
     ret = number_from_double (((number_object *) obj)->num);
-  else if (PAIR == obj->type)
+  else if (SCM_STRING == obj->type)
+    ret = SCM_string (((string_object *) obj)->str);
+  else if (SCM_PAIR == obj->type)
     ret = cons (copy_object (car (obj)), copy_object (cdr (obj)));
-  else if (FUNC == obj->type)
+  else if (SCM_FUNC == obj->type)
     ret = func (((func_object *) obj)->fn);
-  else if (LAMBDA == obj->type)
+  else if (SCM_LAMBDA == obj->type)
     ret = lambda (copy_object (((lambda_object *) obj)->args),
                   copy_object (((lambda_object *) obj)->sexp));
   else
@@ -132,43 +136,48 @@ free_object (object *obj)
     {
       return;
     }
-  else if (VOID == obj->type)
+  else if (SCM_VOID == obj->type)
     free (obj);
-  else if (ERROR == obj->type)
+  else if (SCM_ERROR == obj->type)
     {
       free (((error_object *) obj)->msg);
       free (obj);
     }
-  else if (ATOM == obj->type)
+  else if (SCM_ATOM == obj->type)
     {
       free (((atom_object *) obj)->name);
       free (obj);
     }
-  else if (BOOL == obj->type)
+  else if (SCM_BOOL == obj->type)
     {
       free (obj);
     }
-  else if (VARIABLE == obj->type)
+  else if (SCM_VARIABLE == obj->type)
     {
       free (((variable_object *) obj)->name);
       free_object (((variable_object *) obj)->value);
       free (obj);
     }
-  else if (NUMBER == obj->type)
+  else if (SCM_NUMBER == obj->type)
     {
       free (obj);
     }
-  else if (PAIR == obj->type)
+  else if (SCM_STRING == obj->type)
+    {
+      free (((string_object *) obj)->str);
+      free (obj);
+    }
+  else if (SCM_PAIR == obj->type)
     {
       free_object (car (obj));
       free_object (cdr (obj));
       free (obj);
     }
-  else if (FUNC == obj->type)
+  else if (SCM_FUNC == obj->type)
     {
       free (obj);
     }
-  else if (LAMBDA == obj->type)
+  else if (SCM_LAMBDA == obj->type)
     {
       free_object (((lambda_object *) obj)->args);
       free_object (((lambda_object *) obj)->sexp);
@@ -186,7 +195,7 @@ atom_replace (object **obj, object *old, object *new)
 {
   int count = 0;
   if (NULL == *obj) return 0;
-  else if (ATOM == (*obj)->type)
+  else if (SCM_ATOM == (*obj)->type)
     {
       if (!strcmp (((atom_object *) *obj)->name,
                    ((atom_object *) old)->name))
@@ -198,7 +207,7 @@ atom_replace (object **obj, object *old, object *new)
         }
       else return 0;
     }
-  else if (PAIR == (*obj)->type)
+  else if (SCM_PAIR == (*obj)->type)
     {
       count += atom_replace (&car (*obj), old, new);
       count += atom_replace (&cdr (*obj), old, new);
@@ -216,7 +225,7 @@ null_p (object *obj)
 int
 pair_p (object *obj)
 {
-  return NULL == obj || PAIR != obj->type ? 0 : 1;
+  return NULL == obj || SCM_PAIR != obj->type ? 0 : 1;
 }
 
 int
@@ -225,7 +234,7 @@ list_p (object *obj)
   if (NULL == obj) return 1;
 
   object *tmp;
-  for (tmp = obj; NULL != tmp && PAIR == tmp->type; tmp = cdr (tmp));
+  for (tmp = obj; NULL != tmp && SCM_PAIR == tmp->type; tmp = cdr (tmp));
   if (NULL == tmp) return 1;
 
   return 0;
@@ -292,12 +301,12 @@ eqv_p (object *obj1, object *obj2)
   if (NULL == obj1 || NULL == obj2) return 0;
   if (obj1->type != obj2->type) return 0;
 
-  if (ATOM == obj1->type) return atom_eqv_p (obj1, obj2);
-  else if (VARIABLE == obj1->type) return varible_eqv_p (obj1, obj2);
-  else if (NUMBER == obj1->type) return number_eqv_p (obj1, obj2);
-  else if (PAIR == obj1->type) return pair_eqv_p (obj1, obj2);
-  else if (FUNC == obj1->type) return func_eqv_p (obj1, obj2);
-  else if (LAMBDA == obj1->type) return lambda_eqv_p (obj1, obj2);
+  if (SCM_ATOM == obj1->type) return atom_eqv_p (obj1, obj2);
+  else if (SCM_VARIABLE == obj1->type) return varible_eqv_p (obj1, obj2);
+  else if (SCM_NUMBER == obj1->type) return number_eqv_p (obj1, obj2);
+  else if (SCM_PAIR == obj1->type) return pair_eqv_p (obj1, obj2);
+  else if (SCM_FUNC == obj1->type) return func_eqv_p (obj1, obj2);
+  else if (SCM_LAMBDA == obj1->type) return lambda_eqv_p (obj1, obj2);
   else
     {
       print_error (ETYPE);
@@ -314,7 +323,7 @@ SCM_void ()
       print_error (ENOMEM);
       exit (1);
     }
-  ptr->type = VOID;
+  ptr->type = SCM_VOID;
   return ptr;
 }
 
@@ -333,7 +342,7 @@ SCM_error (enum error x, const char *str)
       print_error (ENOMEM);
       exit (1);
     }
-  ptr->type = ERROR;
+  ptr->type = SCM_ERROR;
   ptr->error = x;
   strcpy (msg, str);
   ptr->msg = msg;
@@ -356,7 +365,7 @@ atom (const char *str)
       exit (1);
     }
   strcpy (name, str);
-  atom->type = ATOM;
+  atom->type = SCM_ATOM;
   ((atom_object *) atom)->name = name;
   return atom;
 }
@@ -370,7 +379,7 @@ bool (char x)
       print_error (ENOMEM);
       exit (1);
     }
-  ptr->type = BOOL;
+  ptr->type = SCM_BOOL;
   ptr->value = x ? 1 : 0;
   return (object *) ptr;
 }
@@ -391,7 +400,7 @@ variable (const char *name, object *value)
       exit (1);
     }
   strcpy (str, name);
-  ptr->type = VARIABLE;
+  ptr->type = SCM_VARIABLE;
   ptr->name = str;
   ptr->value = value;
   return (object *) ptr;
@@ -406,7 +415,7 @@ number (const char *str)
       print_error (ENOMEM);
       exit (1);
     }
-  ptr->type = NUMBER;
+  ptr->type = SCM_NUMBER;
   ptr->num = atof (str);
   return (object *) ptr;
 }
@@ -420,8 +429,29 @@ number_from_double (double x)
       print_error (ENOMEM);
       exit (1);
     }
-  ptr->type = NUMBER;
+  ptr->type = SCM_NUMBER;
   ptr->num = x;
+  return (object *) ptr;
+}
+
+object *
+SCM_string (const char *str)
+{
+  string_object *ptr = malloc (sizeof (string_object));
+  if (NULL == ptr)
+    {
+      print_error (ENOMEM);
+      exit (1);
+    }
+  char *tmp = malloc (strlen (str) + 1);
+  if (NULL == tmp)
+    {
+      print_error (ENOMEM);
+      exit (1);
+    }
+  strcpy (tmp, str);
+  ptr->type = SCM_STRING;
+  ptr->str = tmp;
   return (object *) ptr;
 }
 
@@ -434,7 +464,7 @@ cons (object *obj1, object *obj2)
       print_error (ENOMEM);
       exit (1);
     }
-  pair->type = PAIR;
+  pair->type = SCM_PAIR;
   car (pair) = obj1;
   cdr (pair) = obj2;
   return pair;
@@ -449,7 +479,7 @@ func (object * (*fn) (object **, object *))
       print_error (ENOMEM);
       exit (1);
     }
-  ptr->type = FUNC;
+  ptr->type = SCM_FUNC;
   ptr->fn = fn;
   return (object *) ptr;
 }
@@ -463,7 +493,7 @@ lambda (object *args, object *sexp)
       print_error (ENOMEM);
       exit (1);
     }
-  ptr->type = LAMBDA;
+  ptr->type = SCM_LAMBDA;
   ptr->args = args;
   ptr->sexp = sexp;
   return (object *) ptr;
@@ -590,7 +620,7 @@ eval_pair (object **env, object *sexp)
     {
       append (&new_sexp, cons (eval (env, car (tmp)), NULL));
     }
-  if (ATOM == (car (new_sexp))->type)
+  if (SCM_ATOM == (car (new_sexp))->type)
     {
       tmp = car (new_sexp);
       car (new_sexp) = env_search (env, tmp);
@@ -599,13 +629,13 @@ eval_pair (object **env, object *sexp)
       free_object (new_sexp);
       return tmp;
     }
-  else if (FUNC == (car (new_sexp))->type)
+  else if (SCM_FUNC == (car (new_sexp))->type)
     {
       tmp = eval_fn (env, new_sexp);
       free_object (new_sexp);
       return tmp;
     }
-  else if (LAMBDA == (car (new_sexp))->type)
+  else if (SCM_LAMBDA == (car (new_sexp))->type)
     {
       tmp = eval_lambda (env, new_sexp);
       free_object (new_sexp);
@@ -624,19 +654,21 @@ eval (object **env, object *sexp)
 {
   if (NULL == sexp)
     return NULL;
-  else if (ATOM == sexp->type)
+  else if (SCM_ATOM == sexp->type)
     return copy_object (sexp);
-  else if (BOOL == sexp->type)
+  else if (SCM_BOOL == sexp->type)
     return copy_object (sexp);
-  else if (VARIABLE == sexp->type)
+  else if (SCM_VARIABLE == sexp->type)
     return eval (env, ((variable_object *) sexp)->value);
-  else if (NUMBER == sexp->type)
+  else if (SCM_NUMBER == sexp->type)
     return copy_object (sexp);
-  else if (PAIR == sexp->type)
+  else if (SCM_STRING == sexp->type)
+    return copy_object (sexp);
+  else if (SCM_PAIR == sexp->type)
     return eval_pair (env, sexp);
-  else if (FUNC == sexp->type)
+  else if (SCM_FUNC == sexp->type)
     return copy_object (sexp);
-  else if (LAMBDA == sexp->type)
+  else if (SCM_LAMBDA == sexp->type)
     return copy_object (sexp);
   else
     {
@@ -653,20 +685,20 @@ fn_define (object **env, object *args)
   if (2 != length (args))
     return SCM_error (EARGNUM,
                       "Wrong number of arguments to #<procedure define>.");
-  if (ATOM != (car (args))->type)
+  if (SCM_ATOM != (car (args))->type)
     return SCM_error (ETYPE,
                       "Wrong type argument in position 1.");
   object *value;
-  if (ATOM == (car (cdr (args)))->type)
+  if (SCM_ATOM == (car (cdr (args)))->type)
     {
       value = env_search (env, car (cdr (args)));
-      if (ERROR == value->type) return value;
+      if (SCM_ERROR == value->type) return value;
       env_append (env, variable (((atom_object *) car (args))->name, value));
     }
   else
     {
       value = eval (env, car (cdr (args)));
-      if (ERROR == value->type) return value;
+      if (SCM_ERROR == value->type) return value;
       env_append (env, variable (((atom_object *) car (args))->name, value));
     }
   return SCM_void ();
@@ -689,7 +721,7 @@ fn_car (object **env, object *args)
   if (1 != length (args))
     return SCM_error (EARGNUM,
                       "Wrong number of arguments to #<procedure car>.");
-  if (PAIR != (car (args))->type)
+  if (SCM_PAIR != (car (args))->type)
     return SCM_error (ETYPE,
                       "Wrong type argument in position 1.");
   return copy_object (car (car (args)));
@@ -701,7 +733,7 @@ fn_cdr (object **env, object *args)
   if (1 != length (args))
     return SCM_error (EARGNUM,
                       "Wrong number of arguments to #<procedure cdr>.");
-  if (PAIR != (car (args))->type)
+  if (SCM_PAIR != (car (args))->type)
     return SCM_error (ETYPE,
                       "Wrong type argument in position 1.");
   return copy_object (cdr (car (args)));
@@ -713,7 +745,7 @@ fn_add (object **env, object *args)
   object *i;
   foreach (i, args)
     {
-      if (NUMBER != (car (i))->type)
+      if (SCM_NUMBER != (car (i))->type)
         return SCM_error (ETYPE,
                           "In procedure +: Wrong type.");
     }
@@ -731,7 +763,7 @@ fn_mul (object **env, object *args)
   object *i;
   foreach (i, args)
     {
-      if (NUMBER != (car (i))->type)
+      if (SCM_NUMBER != (car (i))->type)
         return SCM_error (ETYPE,
                           "In procedure *: Wrong type.");
     }
@@ -749,7 +781,7 @@ fn_sub (object **env, object *args)
   object *i;
   foreach (i, args)
     {
-      if (NUMBER != (car (i))->type)
+      if (SCM_NUMBER != (car (i))->type)
         return SCM_error (ETYPE,
                           "In procedure -: Wrong type.");
     }
@@ -770,7 +802,7 @@ fn_div (object **env, object *args)
   object *i;
   foreach (i, args)
     {
-      if (NUMBER != (car (i))->type)
+      if (SCM_NUMBER != (car (i))->type)
         return SCM_error (ETYPE,
                           "In procedure /: Wrong type.");
     }
@@ -791,7 +823,7 @@ fn_lt (object **env, object *args)
   object *i;
   foreach (i, args)
     {
-      if (NUMBER != (car (i))->type)
+      if (SCM_NUMBER != (car (i))->type)
         return SCM_error (ETYPE,
                           "In procedure <: Wrong type.");
     }
@@ -816,7 +848,7 @@ fn_gt (object **env, object *args)
   object *i;
   foreach (i, args)
     {
-      if (NUMBER != (car (i))->type)
+      if (SCM_NUMBER != (car (i))->type)
         return SCM_error (ETYPE,
                           "In procedure >: Wrong type.");
     }
@@ -841,7 +873,7 @@ fn_if (object **env, object *args)
   if (3 != length (args))
     return SCM_error (EARGNUM,
                       "Wrong number of arguments to #<procedure if>.");
-  if (BOOL != (car (args))->type || ((bool_object *) car (args))->value)
+  if (SCM_BOOL != (car (args))->type || ((bool_object *) car (args))->value)
     return copy_object (car (cdr (args)));
   else return copy_object (car (cdr (cdr (args))));
 }

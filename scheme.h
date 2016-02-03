@@ -25,15 +25,16 @@ along with toy-scheme.  If not, see <http://www.gnu.org/licenses/>.  */
 
 enum type
   {
-    VOID,
-    ERROR,
-    ATOM,
-    BOOL,
-    VARIABLE,
-    NUMBER,
-    PAIR,
-    FUNC,
-    LAMBDA
+    SCM_VOID,
+    SCM_ERROR,
+    SCM_ATOM,
+    SCM_BOOL,
+    SCM_VARIABLE,
+    SCM_NUMBER,
+    SCM_STRING,
+    SCM_PAIR,
+    SCM_FUNC,
+    SCM_LAMBDA
   };
 
 /* Enumeration of error type.  */
@@ -98,6 +99,12 @@ typedef struct
 typedef struct
 {
   enum type type;
+  char *str;
+} string_object;
+
+typedef struct
+{
+  enum type type;
   object *car;
   object *cdr;
 } pair_object;
@@ -158,6 +165,7 @@ object *bool (char x);
 object *variable (const char *name, object *value);
 object *number (const char *str);
 object *number_from_double (double x);
+object *SCM_string (const char *str);
 object *cons (object *obj1, object *obj2);
 object *func (object * (*fn) (object **, object *));
 object *lambda (object *args, object *sexp);

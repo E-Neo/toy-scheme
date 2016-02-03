@@ -227,6 +227,19 @@ main ()
   free_object (sexp);
   free_object (ans);
 
+  /* (+ 1 (* "haha" 1)) */
+  printf ("> (+ 1 (* \"haha\" 1))\n");
+  sexp = cons (func (&fn_add),
+               cons (cons (func (&fn_mul),
+                           cons (SCM_string ("haha"),
+                                 cons (number ("1"),
+                                       NULL))),
+                     NULL));
+  ans = eval (&env, sexp);
+  println (ans);
+  free_object (sexp);
+  free_object (ans);
+
   object *i;
   printf ("Environment list:\n");
   foreach (i, env)
