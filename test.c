@@ -164,15 +164,15 @@ main ()
   free_object (sexp);
   free_object (ans);
 
-  /* (factorial 3) => 6
-  printf ("> (factorial 3)\n");
+  /* (factorial 6) => 720 */
+  printf ("> (factorial 6)\n");
   sexp = cons (atom ("factorial"),
-               cons (number ("3"),
+               cons (number ("6"),
                      NULL));
   ans = eval (&env, sexp);
   println (ans);
   free_object (sexp);
-  free_object (ans);*/
+  free_object (ans);
 
   /* (new_square 9) => 81 */
   printf ("> (new_square 9)\n");

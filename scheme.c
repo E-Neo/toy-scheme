@@ -20,9 +20,9 @@ along with toy-scheme.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "scheme.h"
 
 void
-print_error (enum error error)
+print_fatal (enum error error)
 {
-  fprintf (stderr, "ERROR: ");
+  fprintf (stderr, "FATAL: ");
   switch (error)
     {
     case ENOMEM:
@@ -79,7 +79,7 @@ print (object *obj)
     }
   else
     {
-      print_error (ETYPE);
+      print_fatal (ETYPE);
       exit (1);
     }
 }
@@ -88,7 +88,8 @@ void
 println (object *obj)
 {
   print (obj);
-  printf ("\n");
+  if (NULL != obj && SCM_VOID != obj->type)
+    printf ("\n");
 }
 
 object *
@@ -122,7 +123,7 @@ copy_object (object *obj)
                   copy_object (((lambda_object *) obj)->sexp));
   else
     {
-      print_error (ETYPE);
+      print_fatal (ETYPE);
       exit (1);
     }
 
@@ -185,7 +186,7 @@ free_object (object *obj)
     }
   else
     {
-      print_error (ETYPE);
+      print_fatal (ETYPE);
       exit (1);
     }
 }
@@ -260,7 +261,7 @@ varible_eqv_p (object *obj1, object *obj2)
         }
       else
         {
-          print_error (ECONFLICT);
+          print_fatal (ECONFLICT);
           exit (1);
         }
     }
@@ -309,7 +310,7 @@ eqv_p (object *obj1, object *obj2)
   else if (SCM_LAMBDA == obj1->type) return lambda_eqv_p (obj1, obj2);
   else
     {
-      print_error (ETYPE);
+      print_fatal (ETYPE);
       exit (1);
     }
 }
@@ -320,7 +321,7 @@ SCM_void ()
   object *ptr = malloc (sizeof (void_object));
   if (NULL == ptr)
     {
-      print_error (ENOMEM);
+      print_fatal (ENOMEM);
       exit (1);
     }
   ptr->type = SCM_VOID;
@@ -333,13 +334,13 @@ SCM_error (enum error x, const char *str)
   error_object *ptr = malloc (sizeof (error_object));
   if (NULL == ptr)
     {
-      print_error (ENOMEM);
+      print_fatal (ENOMEM);
       exit (1);
     }
   char *msg = malloc (strlen (str) + 1);
   if (NULL == msg)
     {
-      print_error (ENOMEM);
+      print_fatal (ENOMEM);
       exit (1);
     }
   ptr->type = SCM_ERROR;
@@ -355,13 +356,13 @@ atom (const char *str)
   object *atom = malloc (sizeof (atom_object));
   if (NULL == atom)
     {
-      print_error (ENOMEM);
+      print_fatal (ENOMEM);
       exit (1);
     }
   char *name = malloc (strlen (str) + 1);
   if (NULL == name)
     {
-      print_error (ENOMEM);
+      print_fatal (ENOMEM);
       exit (1);
     }
   strcpy (name, str);
@@ -376,7 +377,7 @@ bool (char x)
   bool_object *ptr = malloc (sizeof (bool_object));
   if (NULL == ptr)
     {
-      print_error (ENOMEM);
+      print_fatal (ENOMEM);
       exit (1);
     }
   ptr->type = SCM_BOOL;
@@ -390,13 +391,13 @@ variable (const char *name, object *value)
   variable_object *ptr = malloc (sizeof (variable_object));
   if (NULL == ptr)
     {
-      print_error (ENOMEM);
+      print_fatal (ENOMEM);
       exit (1);
     }
   char *str = malloc (strlen (name) + 1);
   if (NULL == str)
     {
-      print_error (ENOMEM);
+      print_fatal (ENOMEM);
       exit (1);
     }
   strcpy (str, name);
@@ -412,7 +413,7 @@ number (const char *str)
   number_object *ptr = malloc (sizeof (number_object));
   if (NULL == ptr)
     {
-      print_error (ENOMEM);
+      print_fatal (ENOMEM);
       exit (1);
     }
   ptr->type = SCM_NUMBER;
@@ -426,7 +427,7 @@ number_from_double (double x)
   number_object *ptr = malloc (sizeof (number_object));
   if (NULL == ptr)
     {
-      print_error (ENOMEM);
+      print_fatal (ENOMEM);
       exit (1);
     }
   ptr->type = SCM_NUMBER;
@@ -440,13 +441,13 @@ SCM_string (const char *str)
   string_object *ptr = malloc (sizeof (string_object));
   if (NULL == ptr)
     {
-      print_error (ENOMEM);
+      print_fatal (ENOMEM);
       exit (1);
     }
   char *tmp = malloc (strlen (str) + 1);
   if (NULL == tmp)
     {
-      print_error (ENOMEM);
+      print_fatal (ENOMEM);
       exit (1);
     }
   strcpy (tmp, str);
@@ -461,7 +462,7 @@ cons (object *obj1, object *obj2)
   object *pair = malloc (sizeof (pair_object));
   if (NULL == pair)
     {
-      print_error (ENOMEM);
+      print_fatal (ENOMEM);
       exit (1);
     }
   pair->type = SCM_PAIR;
@@ -476,7 +477,7 @@ func (object * (*fn) (object **, object *))
   func_object *ptr = malloc (sizeof (func_object));
   if (NULL == ptr)
     {
-      print_error (ENOMEM);
+      print_fatal (ENOMEM);
       exit (1);
     }
   ptr->type = SCM_FUNC;
@@ -490,7 +491,7 @@ lambda (object *args, object *sexp)
   lambda_object *ptr = malloc (sizeof (lambda_object));
   if (NULL == ptr)
     {
-      print_error (ENOMEM);
+      print_fatal (ENOMEM);
       exit (1);
     }
   ptr->type = SCM_LAMBDA;
@@ -504,7 +505,7 @@ append (object **li, object *obj)
 {
   if (!list_p (*li))
     {
-      print_error (ETYPE);
+      print_fatal (ETYPE);
       exit (1);
     }
 
@@ -597,6 +598,10 @@ eval_lambda (object **env, object *sexp)
 {
   object *lamb = car (sexp);
   object *args = cdr (sexp);
+  if (length (((lambda_object *) lamb)->args) !=
+      length (args))
+    return SCM_error (EARGNUM,
+                      "Wrong number of arguments to #<procedure lambda>.");
   object *obj = copy_object (((lambda_object *) lamb)->sexp);
   object *i, *j;
   object *ret;
@@ -614,39 +619,21 @@ eval_lambda (object **env, object *sexp)
 object *
 eval_pair (object **env, object *sexp)
 {
-  object *new_sexp = NULL;
-  object *tmp;
-  foreach (tmp, sexp)
+  if (SCM_ATOM == (car (sexp))->type)
     {
-      append (&new_sexp, cons (eval (env, car (tmp)), NULL));
-    }
-  if (SCM_ATOM == (car (new_sexp))->type)
-    {
-      tmp = car (new_sexp);
-      car (new_sexp) = env_search (env, tmp);
-      free_object (tmp);
+      object *tmp = env_search (env, car (sexp));
+      object *new_sexp = cons (tmp, cdr (sexp));
       tmp = eval (env, new_sexp);
-      free_object (new_sexp);
+      free_object (car (new_sexp));
+      free (new_sexp);
       return tmp;
     }
-  else if (SCM_FUNC == (car (new_sexp))->type)
-    {
-      tmp = eval_fn (env, new_sexp);
-      free_object (new_sexp);
-      return tmp;
-    }
-  else if (SCM_LAMBDA == (car (new_sexp))->type)
-    {
-      tmp = eval_lambda (env, new_sexp);
-      free_object (new_sexp);
-      return tmp;
-    }
+  else if (SCM_FUNC == (car (sexp))->type)
+    return eval_fn (env, sexp);
+  else if (SCM_LAMBDA == (car (sexp))->type)
+    return eval_lambda (env, sexp);
   else
-    {
-      tmp = SCM_error (ETYPE, "Wrong type to apply.");
-      free_object (new_sexp);
-      return tmp;
-    }
+    return SCM_error (ETYPE, "Wrong type to apply.");
 }
 
 object *
@@ -654,6 +641,11 @@ eval (object **env, object *sexp)
 {
   if (NULL == sexp)
     return NULL;
+  else if (SCM_ERROR == sexp->type)
+    {
+      println (sexp);
+      return copy_object (sexp);
+    }
   else if (SCM_ATOM == sexp->type)
     return copy_object (sexp);
   else if (SCM_BOOL == sexp->type)
@@ -672,7 +664,7 @@ eval (object **env, object *sexp)
     return copy_object (sexp);
   else
     {
-      print_error (ETYPE);
+      print_fatal (ETYPE);
       exit (1);
     }
 }
@@ -682,23 +674,40 @@ eval (object **env, object *sexp)
 object *
 fn_define (object **env, object *args)
 {
+  object *ret;
   if (2 != length (args))
-    return SCM_error (EARGNUM,
-                      "Wrong number of arguments to #<procedure define>.");
+    {
+      ret = SCM_error (EARGNUM,
+                       "Wrong number of arguments to #<procedure define>.");
+      println (ret);
+      return ret;
+    }
   if (SCM_ATOM != (car (args))->type)
-    return SCM_error (ETYPE,
-                      "Wrong type argument in position 1.");
+    {
+      ret = SCM_error (ETYPE,
+                       "Wrong type argument in position 1.");
+      println (ret);
+      return ret;
+    }
   object *value;
   if (SCM_ATOM == (car (cdr (args)))->type)
     {
       value = env_search (env, car (cdr (args)));
-      if (SCM_ERROR == value->type) return value;
+      if (SCM_ERROR == value->type)
+        {
+          println (value);
+          return value;
+        }
       env_append (env, variable (((atom_object *) car (args))->name, value));
     }
   else
     {
       value = eval (env, car (cdr (args)));
-      if (SCM_ERROR == value->type) return value;
+      if (SCM_ERROR == value->type)
+        {
+          println (value);
+          return value;
+        }
       env_append (env, variable (((atom_object *) car (args))->name, value));
     }
   return SCM_void ();
@@ -707,52 +716,91 @@ fn_define (object **env, object *args)
 object *
 fn_cons (object **env, object *args)
 {
+  object *ret;
   if (2 != length (args))
-    return SCM_error (EARGNUM,
-                      "Wrong number of arguments to #<procedure cons>.");
-  object *obj1 = car (args);
-  object *obj2 = car (cdr (args));
-  return cons (copy_object (obj1), copy_object (obj2));
+    {
+      ret = SCM_error (EARGNUM,
+                       "Wrong number of arguments to #<procedure cons>.");
+      println (ret);
+      return ret;
+    }
+  object *obj1 = eval (env, car (args));
+  if (SCM_ERROR == obj1->type)
+    {
+      println (obj1);
+      return obj1;
+    }
+  object *obj2 = eval (env, car (cdr (args)));
+  if (SCM_ERROR == obj2->type)
+    {
+      println (obj2);
+      return obj2;
+    }
+  return cons (obj1, obj2);
 }
 
 object *
 fn_car (object **env, object *args)
 {
+  object *ret;
   if (1 != length (args))
-    return SCM_error (EARGNUM,
-                      "Wrong number of arguments to #<procedure car>.");
+    {
+      ret = SCM_error (EARGNUM,
+                       "Wrong number of arguments to #<procedure car>.");
+      println (ret);
+      return ret;
+    }
   if (SCM_PAIR != (car (args))->type)
-    return SCM_error (ETYPE,
-                      "Wrong type argument in position 1.");
+    {
+      ret = SCM_error (ETYPE,
+                       "Wrong type argument in position 1.");
+      println (ret);
+      return ret;
+    }
   return copy_object (car (car (args)));
 }
 
 object *
 fn_cdr (object **env, object *args)
 {
+  object *ret;
   if (1 != length (args))
-    return SCM_error (EARGNUM,
-                      "Wrong number of arguments to #<procedure cdr>.");
+    {
+      ret = SCM_error (EARGNUM,
+                       "Wrong number of arguments to #<procedure cdr>.");
+      println (ret);
+      return ret;
+    }
   if (SCM_PAIR != (car (args))->type)
-    return SCM_error (ETYPE,
-                      "Wrong type argument in position 1.");
+    {
+      ret = SCM_error (ETYPE,
+                       "Wrong type argument in position 1.");
+      println (ret);
+      return ret;
+    }
   return copy_object (cdr (car (args)));
 }
 
 object *
 fn_add (object **env, object *args)
 {
+  object *ret;
+  object *tmp;
   object *i;
-  foreach (i, args)
-    {
-      if (SCM_NUMBER != (car (i))->type)
-        return SCM_error (ETYPE,
-                          "In procedure +: Wrong type.");
-    }
   double res = 0.0;
   foreach (i, args)
     {
-      res += ((number_object *) car (i))->num;
+      tmp = eval (env, car (i));
+      if (SCM_NUMBER != tmp->type)
+        {
+          free_object (tmp);
+          ret = SCM_error (ETYPE,
+                           "In procedure +: Wrong type.");
+          println (ret);
+          return ret;
+        }
+      res += ((number_object *) tmp)->num;
+      free_object (tmp);
     }
   return number_from_double (res);
 }
@@ -760,17 +808,23 @@ fn_add (object **env, object *args)
 object *
 fn_mul (object **env, object *args)
 {
+  object *ret;
+  object *tmp;
   object *i;
-  foreach (i, args)
-    {
-      if (SCM_NUMBER != (car (i))->type)
-        return SCM_error (ETYPE,
-                          "In procedure *: Wrong type.");
-    }
   double res = 1.0;
   foreach (i, args)
     {
-      res *= ((number_object *) car (i))->num;
+      tmp = eval (env, car (i));
+      if (SCM_NUMBER != tmp->type)
+        {
+          free_object (tmp);
+          ret = SCM_error (ETYPE,
+                           "In procedure *: Wrong type.");
+          println (ret);
+          return ret;
+        }
+      res *= ((number_object *) tmp)->num;
+      free_object (tmp);
     }
   return number_from_double (res);
 }
@@ -778,90 +832,197 @@ fn_mul (object **env, object *args)
 object *
 fn_sub (object **env, object *args)
 {
+  object *ret;
+  object *tmp;
   object *i;
-  foreach (i, args)
+  double res;
+  if (0 == length (args))
     {
-      if (SCM_NUMBER != (car (i))->type)
-        return SCM_error (ETYPE,
-                          "In procedure -: Wrong type.");
+      ret = SCM_error (EARGNUM,
+                       "Wrong number of arguments to #<procedure ->.");
+      println (ret);
+      return ret;
     }
-  double res = ((number_object *) car (args))->num;
-  if (1 == length (args))
-    return number_from_double (-res);
   else
-    foreach (i, cdr (args))
-      {
-        res -= ((number_object *) car (i))->num;
-      }
-  return number_from_double (res);
+    {
+      tmp = eval (env, car (args));
+      if (SCM_NUMBER != tmp->type)
+        {
+          free_object (tmp);
+          ret = SCM_error (ETYPE,
+                           "In procedure -: Wrong type.");
+          println (ret);
+          return ret;
+        }
+      res = ((number_object *) tmp)->num;
+      free_object (tmp);
+      if (1 == length (args))
+        return number_from_double (-res);
+      else
+        {
+          foreach (i, cdr (args))
+            {
+              tmp = eval (env, car (i));
+              if (SCM_NUMBER != tmp->type)
+                {
+                  free_object (tmp);
+                  ret = SCM_error (ETYPE,
+                                   "In procedure -: Wrong type.");
+                  println (ret);
+                  return ret;
+                }
+              res -= ((number_object *) tmp)->num;
+              free_object (tmp);
+            }
+          return number_from_double (res);
+        }
+    }
 }
 
 object *
 fn_div (object **env, object *args)
 {
+  object *ret;
+  object *tmp;
   object *i;
-  foreach (i, args)
+  double res;
+  if (0 == length (args))
     {
-      if (SCM_NUMBER != (car (i))->type)
-        return SCM_error (ETYPE,
-                          "In procedure /: Wrong type.");
+      ret = SCM_error (EARGNUM,
+                       "Wrong number of arguments to #<procedure />.");
+      println (ret);
+      return ret;
     }
-  double res = ((number_object *) car (args))->num;
-  if (1 == length (args))
-    return number_from_double (1 / res);
   else
-    foreach (i, cdr (args))
-      {
-        res /= ((number_object *) car (i))->num;
-      }
-  return number_from_double (res);
+    {
+      tmp = eval (env, car (args));
+      if (SCM_NUMBER != tmp->type)
+        {
+          free_object (tmp);
+          ret = SCM_error (ETYPE,
+                           "In procedure /: Wrong type.");
+          println (ret);
+          return ret;
+        }
+      res = ((number_object *) tmp)->num;
+      free_object (tmp);
+      if (1 == length (args))
+        return number_from_double (1/res);
+      else
+        {
+          foreach (i, cdr (args))
+            {
+              tmp = eval (env, car (i));
+              if (SCM_NUMBER != tmp->type)
+                {
+                  free_object (tmp);
+                  ret = SCM_error (ETYPE,
+                                   "In procedure /: Wrong type.");
+                  println (ret);
+                  return ret;
+                }
+              res /= ((number_object *) tmp)->num;
+              free_object (tmp);
+            }
+          return number_from_double (res);
+        }
+    }
 }
 
 object *
 fn_lt (object **env, object *args)
 {
+  object *ret;
+  object *tmp;
   object *i;
-  foreach (i, args)
-    {
-      if (SCM_NUMBER != (car (i))->type)
-        return SCM_error (ETYPE,
-                          "In procedure <: Wrong type.");
-    }
-  if (1 >= length (args))
+  double res;
+  if (0 == length (args))
     return bool (1);
   else
     {
-      double x = ((number_object *) car (args))->num;
-      foreach (i, cdr (args))
+      tmp = eval (env, car (args));
+      if (SCM_NUMBER != tmp->type)
         {
-          if (x > ((number_object *) car (i))->num)
-            return bool (0);
-          x = ((number_object *) car (i))->num;
+          free_object (tmp);
+          ret = SCM_error (ETYPE,
+                           "In procedure <: Wrong type.");
+          println (ret);
+          return ret;
+        }
+      res = ((number_object *) tmp)->num;
+      free_object (tmp);
+      if (1 == length (args))
+        return bool (1);
+      else
+        {
+          foreach (i, cdr (args))
+            {
+              tmp = eval (env, car (i));
+              if (SCM_NUMBER != tmp->type)
+                {
+                  free_object (tmp);
+                  ret = SCM_error (ETYPE,
+                                   "In procedure <: Wrong type.");
+                  println (ret);
+                  return ret;
+                }
+              if (res > ((number_object *) tmp)->num)
+                {
+                  free_object (tmp);
+                  return bool (0);
+                }
+              res = ((number_object *) tmp)->num;
+              free_object (tmp);
+            }
         }
     }
   return bool (1);
 }
-
 object *
 fn_gt (object **env, object *args)
 {
+  object *ret;
+  object *tmp;
   object *i;
-  foreach (i, args)
-    {
-      if (SCM_NUMBER != (car (i))->type)
-        return SCM_error (ETYPE,
-                          "In procedure >: Wrong type.");
-    }
-  if (1 >= length (args))
+  double res;
+  if (0 == length (args))
     return bool (1);
   else
     {
-      double x = ((number_object *) car (args))->num;
-      foreach (i, cdr (args))
+      tmp = eval (env, car (args));
+      if (SCM_NUMBER != tmp->type)
         {
-          if (x < ((number_object *) car (i))->num)
-            return bool (0);
-          x = ((number_object *) car (i))->num;
+          free_object (tmp);
+          ret = SCM_error (ETYPE,
+                           "In procedure >: Wrong type.");
+          println (ret);
+          return ret;
+        }
+      res = ((number_object *) tmp)->num;
+      free_object (tmp);
+      if (1 == length (args))
+        return bool (1);
+      else
+        {
+          foreach (i, cdr (args))
+            {
+              tmp = eval (env, car (i));
+              if (SCM_NUMBER != tmp->type)
+                {
+                  free_object (tmp);
+                  ret = SCM_error (ETYPE,
+                                   "In procedure >: Wrong type.");
+                  println (ret);
+                  return ret;
+                }
+              if (res < ((number_object *) tmp)->num)
+                {
+                  free_object (tmp);
+                  return bool (0);
+                }
+              res = ((number_object *) tmp)->num;
+              free_object (tmp);
+            }
         }
     }
   return bool (1);
@@ -870,10 +1031,24 @@ fn_gt (object **env, object *args)
 object *
 fn_if (object **env, object *args)
 {
+  object *ret;
+  object *tmp;
   if (3 != length (args))
-    return SCM_error (EARGNUM,
-                      "Wrong number of arguments to #<procedure if>.");
-  if (SCM_BOOL != (car (args))->type || ((bool_object *) car (args))->value)
-    return copy_object (car (cdr (args)));
-  else return copy_object (car (cdr (cdr (args))));
+    {
+      ret = SCM_error (EARGNUM,
+                       "Wrong number of arguments to #<procedure if>.");
+      println (ret);
+      return ret;
+    }
+  tmp = eval (env, car (args));
+  if (NULL == tmp || SCM_BOOL != tmp->type || ((bool_object *) tmp)->value)
+    {
+      free_object (tmp);
+      return eval (env, car (cdr (args)));
+    }
+  else
+    {
+      free_object (tmp);
+      return eval (env, car (cdr (cdr (args))));
+    }
 }

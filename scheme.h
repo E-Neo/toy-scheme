@@ -129,7 +129,7 @@ typedef struct
 
 /* Print errors to stderr and print objects to stdout.  */
 
-void print_error (enum error error);
+void print_fatal (enum error error);
 void print (object *obj);
 void println (object *obj);
 
