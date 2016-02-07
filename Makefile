@@ -1,2 +1,2 @@
-a.out : test.c scheme.c parser.c
+a.out : test.c object.c parser.c
 	gcc -Wall -g -o $@ $^
