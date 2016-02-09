@@ -18,3 +18,9 @@ You should have received a copy of the GNU General Public License
 along with toy-scheme.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include "parser.h"
+
+object *
+parse (object **env, const char *line)
+{
+  return number ("3.14159265");
+}

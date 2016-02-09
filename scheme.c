@@ -1,4 +1,4 @@
-/* Header files for toy-scheme.
+/* toy-scheme interpreter.
 
 Copyright (C) 2016 E-Neo
 
@@ -17,7 +17,42 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with toy-scheme.  If not, see <http://www.gnu.org/licenses/>.  */
 
-#include "parser.h"
+#include "scheme.h"
+#include <readline/readline.h>
+#include <readline/history.h>
 
-#define SCM_RELEASE   "toy-scheme 0.0.0"
-#define SCM_COPYRIGHT SCM_RELEASE "\n" "Copyright (C) 2016 E-Neo"
+static void
+print_version ()
+{
+  printf (SCM_COPYRIGHT "\n");
+}
+
+static void
+doREPL (object **env)
+{
+  int status = 1;
+  char *line;
+  object *sexp;
+  object *ans;
+  while (status)
+    {
+      line = readline ("> ");
+      add_history (line);
+      sexp = parse (env, line);
+      ans = eval (env, sexp);
+      println (ans);
+      free_object (sexp);
+      free_object (ans);
+      free (line);
+    }
+}
+
+int
+main ()
+{
+  object *env = init_env ();
+  print_version ();
+  doREPL (&env);
+  free_object (env);
+  return 0;
+}
