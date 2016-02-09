@@ -160,15 +160,15 @@ int eqv_p (object *obj1, object *obj2);
 
 object *SCM_void ();
 object *SCM_error (enum error x, const char *str);
-object *atom (const char *str);
-object *bool (char x);
-object *variable (const char *name, object *value);
-object *number (const char *str);
-object *number_from_double (double x);
+object *SCM_atom (const char *str);
+object *SCM_bool (char x);
+object *SCM_variable (const char *name, object *value);
+object *SCM_number (const char *str);
+object *SCM_number_from_double (double x);
 object *SCM_string (const char *str);
-object *cons (object *obj1, object *obj2);
-object *func (object * (*fn) (object **, object *));
-object *lambda (object *args, object *sexp);
+object *SCM_cons (object *obj1, object *obj2);
+object *SCM_func (object * (*fn) (object **, object *));
+object *SCM_lambda (object *args, object *sexp);
 
 /* Some low level functions to manipulate list object.  */
 

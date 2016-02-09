@@ -28,7 +28,7 @@ main ()
 
   /* 3.14 => 3.14 */
   printf ("> 3.14\n");
-  sexp = number ("3.14");
+  sexp = SCM_number ("3.14");
   ans = eval (&env, sexp);
   println (ans);
   free_object (sexp);
@@ -36,21 +36,21 @@ main ()
 
   /* (+ 1 (- 6 4) (/ 81 (* 3 3 3))) => 6 */
   printf ("> (+ 1 (- 6 4) (/ 81 (* 3 3 3)))\n");
-  sexp = cons (func (&fn_add),
-               cons (number ("1"),
-                     cons (cons (func (&fn_sub),
-                                 cons (number ("6"),
-                                       cons (number ("4"),
-                                             NULL))),
-                           (cons (cons (func (&fn_div),
-                                        cons (number ("81"),
-                                              cons (cons (func (&fn_mul),
-                                                          cons (number ("3"),
-                                                                cons (number ("3"),
-                                                                      cons (number ("3"),
-                                                                            NULL)))),
-                                                    NULL))),
-                                  NULL)))));
+  sexp = SCM_cons (SCM_func (&fn_add),
+                   SCM_cons (SCM_number ("1"),
+                             SCM_cons (SCM_cons (SCM_func (&fn_sub),
+                                                 SCM_cons (SCM_number ("6"),
+                                                           SCM_cons (SCM_number ("4"),
+                                                                     NULL))),
+                                       (SCM_cons (SCM_cons (SCM_func (&fn_div),
+                                                            SCM_cons (SCM_number ("81"),
+                                                                      SCM_cons (SCM_cons (SCM_func (&fn_mul),
+                                                                                          SCM_cons (SCM_number ("3"),
+                                                                                                    SCM_cons (SCM_number ("3"),
+                                                                                                              SCM_cons (SCM_number ("3"),
+                                                                                                                        NULL)))),
+                                                                                NULL))),
+                                                  NULL)))));
   ans = eval (&env, sexp);
   println (ans);
   free_object (sexp);
@@ -58,16 +58,16 @@ main ()
 
   /* ((lambda (x y) (+ x y)) 1 2) => 3 */
   printf ("> ((lambda (x y) (+ x y)) 1 2)\n");
-  sexp = cons (lambda (cons (atom ("x"),
-                             cons (atom ("y"),
-                                   NULL)),
-                       cons (func (&fn_add),
-                             cons (atom ("x"),
-                                   cons (atom ("y"),
-                                         NULL)))),
-               cons (number ("1"),
-                     cons (number ("2"),
-                           NULL)));
+  sexp = SCM_cons (SCM_lambda (SCM_cons (SCM_atom ("x"),
+                                         SCM_cons (SCM_atom ("y"),
+                                                   NULL)),
+                               SCM_cons (SCM_func (&fn_add),
+                                         SCM_cons (SCM_atom ("x"),
+                                                   SCM_cons (SCM_atom ("y"),
+                                                             NULL)))),
+                   SCM_cons (SCM_number ("1"),
+                             SCM_cons (SCM_number ("2"),
+                                       NULL)));
   ans = eval (&env, sexp);
   println (ans);
   free_object (sexp);
@@ -75,10 +75,10 @@ main ()
 
   /* (cons 1 2) => (1 . 2) */
   printf ("> (cons 1 2)\n");
-  sexp = cons (func (&fn_cons),
-               cons (number ("1"),
-                     cons (number ("2"),
-                           NULL)));
+  sexp = SCM_cons (SCM_func (&fn_cons),
+                   SCM_cons (SCM_number ("1"),
+                             SCM_cons (SCM_number ("2"),
+                                       NULL)));
   ans = eval (&env, sexp);
   println (ans);
   free_object (sexp);
@@ -86,15 +86,15 @@ main ()
 
   /* (define square (lambda (x) (* x x))) */
   printf ("> (define square (lambda (x) (* x x)))\n");
-  sexp = cons (func (&fn_define),
-               cons (atom ("square"),
-                     cons (lambda (cons (atom ("x"),
-                                         NULL),
-                                   cons (func (&fn_mul),
-                                         cons (atom ("x"),
-                                               cons (atom ("x"),
-                                                     NULL)))),
-                           NULL)));
+  sexp = SCM_cons (SCM_func (&fn_define),
+                   SCM_cons (SCM_atom ("square"),
+                             SCM_cons (SCM_lambda (SCM_cons (SCM_atom ("x"),
+                                                             NULL),
+                                                   SCM_cons (SCM_func (&fn_mul),
+                                                             SCM_cons (SCM_atom ("x"),
+                                                                       SCM_cons (SCM_atom ("x"),
+                                                                                 NULL)))),
+                                       NULL)));
   ans = eval (&env, sexp);
   println (ans);
   free_object (sexp);
@@ -102,9 +102,9 @@ main ()
 
   /* (square 8) => 64 */
   printf ("> (square 8)\n");
-  sexp = cons (atom ("square"),
-               cons (number ("8"),
-                     NULL));
+  sexp = SCM_cons (SCM_atom ("square"),
+                   SCM_cons (SCM_number ("8"),
+                             NULL));
   ans = eval (&env, sexp);
   println (ans);
   free_object (sexp);
@@ -112,10 +112,10 @@ main ()
 
   /* (define new_square square) */
   printf ("> (define new_square square)\n");
-  sexp = cons (func (&fn_define),
-               cons (atom ("new_square"),
-                     cons (atom ("square"),
-                           NULL)));
+  sexp = SCM_cons (SCM_func (&fn_define),
+                   SCM_cons (SCM_atom ("new_square"),
+                             SCM_cons (SCM_atom ("square"),
+                                       NULL)));
   ans = eval (&env, sexp);
   println (ans);
   free_object (sexp);
@@ -123,14 +123,14 @@ main ()
 
   /* (define new_square (lambda (x) (square x))) */
   printf ("> (define new_square (lambda (x) (square x)))\n");
-  sexp = cons (func (&fn_define),
-               cons (atom ("new_square"),
-                     cons (lambda (cons (atom ("x"),
-                                         NULL),
-                                   cons (atom ("square"),
-                                         cons (atom ("x"),
-                                               NULL))),
-                           NULL)));
+  sexp = SCM_cons (SCM_func (&fn_define),
+                   SCM_cons (SCM_atom ("new_square"),
+                             SCM_cons (SCM_lambda (SCM_cons (SCM_atom ("x"),
+                                                             NULL),
+                                                   SCM_cons (SCM_atom ("square"),
+                                                             SCM_cons (SCM_atom ("x"),
+                                                                       NULL))),
+                                       NULL)));
   ans = eval (&env, sexp);
   println (ans);
   free_object (sexp);
@@ -138,27 +138,27 @@ main ()
 
   /* (define factorial (lambda (n) (if (< n 1) 1 (* n (factorial (- n 1)))))) */
   printf ("> (define factorial (lambda (n) (if (< n 1) 1 (* n (factorial (- n 1))))))\n");
-  sexp = cons (func (&fn_define),
-               cons (atom ("factorial"),
-                     cons (lambda (cons (atom ("n"),
-                                         NULL),
-                                   cons (func (&fn_if),
-                                         cons (cons (func (&fn_lt),
-                                                     cons (atom ("n"),
-                                                           cons (number ("1"),
-                                                                 NULL))),
-                                               cons (number ("1"),
-                                                     cons (cons (func (&fn_mul),
-                                                                 cons (atom ("n"),
-                                                                       cons (cons (atom ("factorial"),
-                                                                                   cons (cons (func (&fn_sub),
-                                                                                               cons (atom ("n"),
-                                                                                                     cons (number ("1"),
-                                                                                                           NULL))),
-                                                                                         NULL)),
-                                                                             NULL))),
-                                                           NULL))))),
-                           NULL)));
+  sexp = SCM_cons (SCM_func (&fn_define),
+                   SCM_cons (SCM_atom ("factorial"),
+                             SCM_cons (SCM_lambda (SCM_cons (SCM_atom ("n"),
+                                                             NULL),
+                                                   SCM_cons (SCM_func (&fn_if),
+                                                             SCM_cons (SCM_cons (SCM_func (&fn_lt),
+                                                                                 SCM_cons (SCM_atom ("n"),
+                                                                                           SCM_cons (SCM_number ("1"),
+                                                                                                     NULL))),
+                                                                       SCM_cons (SCM_number ("1"),
+                                                                                 SCM_cons (SCM_cons (SCM_func (&fn_mul),
+                                                                                                     SCM_cons (SCM_atom ("n"),
+                                                                                                               SCM_cons (SCM_cons (SCM_atom ("factorial"),
+                                                                                                                                   SCM_cons (SCM_cons (SCM_func (&fn_sub),
+                                                                                                                                                       SCM_cons (SCM_atom ("n"),
+                                                                                                                                                                 SCM_cons (SCM_number ("1"),
+                                                                                                                                                                           NULL))),
+                                                                                                                                             NULL)),
+                                                                                                                         NULL))),
+                                                                                           NULL))))),
+                                       NULL)));
   ans = eval (&env, sexp);
   println (ans);
   free_object (sexp);
@@ -166,9 +166,9 @@ main ()
 
   /* (factorial 6) => 720 */
   printf ("> (factorial 6)\n");
-  sexp = cons (atom ("factorial"),
-               cons (number ("6"),
-                     NULL));
+  sexp = SCM_cons (SCM_atom ("factorial"),
+                   SCM_cons (SCM_number ("6"),
+                             NULL));
   ans = eval (&env, sexp);
   println (ans);
   free_object (sexp);
@@ -176,9 +176,9 @@ main ()
 
   /* (new_square 9) => 81 */
   printf ("> (new_square 9)\n");
-  sexp = cons (atom ("new_square"),
-               cons (number ("9"),
-                     NULL));
+  sexp = SCM_cons (SCM_atom ("new_square"),
+                   SCM_cons (SCM_number ("9"),
+                             NULL));
   ans = eval (&env, sexp);
   println (ans);
   free_object (sexp);
@@ -186,20 +186,20 @@ main ()
 
   /* ((lambda (x) (if (< x 0) (- x) x)) -10) => 10 */
   printf ("> ((lambda (x) (if (< x 0) (- x) x)) -10)\n");
-  sexp = cons (lambda (cons (atom ("x"),
-                             NULL),
-                       cons (func (&fn_if),
-                             cons (cons (func (&fn_lt),
-                                         cons (atom ("x"),
-                                               cons (number ("0"),
-                                                     NULL))),
-                                   cons (cons (func (&fn_sub),
-                                               cons (atom ("x"),
-                                                     NULL)),
-                                         cons (atom ("x"),
-                                               NULL))))),
-               cons (number ("-10"),
-                     NULL));
+  sexp = SCM_cons (SCM_lambda (SCM_cons (SCM_atom ("x"),
+                                         NULL),
+                               SCM_cons (SCM_func (&fn_if),
+                                         SCM_cons (SCM_cons (SCM_func (&fn_lt),
+                                                             SCM_cons (SCM_atom ("x"),
+                                                                       SCM_cons (SCM_number ("0"),
+                                                                                 NULL))),
+                                                   SCM_cons (SCM_cons (SCM_func (&fn_sub),
+                                                                       SCM_cons (SCM_atom ("x"),
+                                                                                 NULL)),
+                                                             SCM_cons (SCM_atom ("x"),
+                                                                       NULL))))),
+                   SCM_cons (SCM_number ("-10"),
+                             NULL));
   ans = eval (&env, sexp);
   println (ans);
   free_object (sexp);
@@ -207,10 +207,10 @@ main ()
 
   /* (define x unbound) */
   printf ("> (define x unbound)\n");
-  sexp = cons (func (&fn_define),
-               cons (atom ("x"),
-                     cons (atom ("unbound"),
-                           NULL)));
+  sexp = SCM_cons (SCM_func (&fn_define),
+                   SCM_cons (SCM_atom ("x"),
+                             SCM_cons (SCM_atom ("unbound"),
+                                       NULL)));
   ans = eval (&env, sexp);
   println (ans);
   free_object (sexp);
@@ -218,10 +218,10 @@ main ()
 
   /* (1 2 3) */
   printf ("> (1 2 3)\n");
-  sexp = cons (number ("1"),
-               cons (number ("2"),
-                     cons (number ("3"),
-                           NULL)));
+  sexp = SCM_cons (SCM_number ("1"),
+                   SCM_cons (SCM_number ("2"),
+                             SCM_cons (SCM_number ("3"),
+                                       NULL)));
   ans = eval (&env, sexp);
   println (ans);
   free_object (sexp);
@@ -229,12 +229,12 @@ main ()
 
   /* (+ 1 (* "haha" 1)) */
   printf ("> (+ 1 (* \"haha\" 1))\n");
-  sexp = cons (func (&fn_add),
-               cons (cons (func (&fn_mul),
-                           cons (SCM_string ("haha"),
-                                 cons (number ("1"),
-                                       NULL))),
-                     NULL));
+  sexp = SCM_cons (SCM_func (&fn_add),
+                   SCM_cons (SCM_cons (SCM_func (&fn_mul),
+                                       SCM_cons (SCM_string ("haha"),
+                                                 SCM_cons (SCM_number ("1"),
+                                                           NULL))),
+                             NULL));
   ans = eval (&env, sexp);
   println (ans);
   free_object (sexp);

@@ -22,5 +22,5 @@ along with toy-scheme.  If not, see <http://www.gnu.org/licenses/>.  */
 object *
 parse (object **env, const char *line)
 {
-  return number ("3.14159265");
+  return SCM_number ("3.14159265");
 }

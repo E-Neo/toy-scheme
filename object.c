@@ -104,23 +104,23 @@ copy_object (object *obj)
     ret = SCM_error (((error_object *) obj)->error,
                      ((error_object *) obj)->msg);
   else if (SCM_ATOM == obj->type)
-    ret = atom (((atom_object *) obj)->name);
+    ret = SCM_atom (((atom_object *) obj)->name);
   else if (SCM_BOOL == obj->type)
-    ret = bool (((bool_object *) obj)->value);
+    ret = SCM_bool (((bool_object *) obj)->value);
   else if (SCM_VARIABLE == obj->type)
-    ret = variable (((variable_object *) obj)->name,
-                    copy_object (((variable_object *) obj)->value));
+    ret = SCM_variable (((variable_object *) obj)->name,
+                        copy_object (((variable_object *) obj)->value));
   else if (SCM_NUMBER == obj->type)
-    ret = number_from_double (((number_object *) obj)->num);
+    ret = SCM_number_from_double (((number_object *) obj)->num);
   else if (SCM_STRING == obj->type)
     ret = SCM_string (((string_object *) obj)->str);
   else if (SCM_PAIR == obj->type)
-    ret = cons (copy_object (car (obj)), copy_object (cdr (obj)));
+    ret = SCM_cons (copy_object (car (obj)), copy_object (cdr (obj)));
   else if (SCM_FUNC == obj->type)
-    ret = func (((func_object *) obj)->fn);
+    ret = SCM_func (((func_object *) obj)->fn);
   else if (SCM_LAMBDA == obj->type)
-    ret = lambda (copy_object (((lambda_object *) obj)->args),
-                  copy_object (((lambda_object *) obj)->sexp));
+    ret = SCM_lambda (copy_object (((lambda_object *) obj)->args),
+                      copy_object (((lambda_object *) obj)->sexp));
   else
     {
       print_fatal (ETYPE);
@@ -351,7 +351,7 @@ SCM_error (enum error x, const char *str)
 }
 
 object *
-atom (const char *str)
+SCM_atom (const char *str)
 {
   object *atom = malloc (sizeof (atom_object));
   if (NULL == atom)
@@ -372,7 +372,7 @@ atom (const char *str)
 }
 
 object *
-bool (char x)
+SCM_bool (char x)
 {
   bool_object *ptr = malloc (sizeof (bool_object));
   if (NULL == ptr)
@@ -386,7 +386,7 @@ bool (char x)
 }
 
 object *
-variable (const char *name, object *value)
+SCM_variable (const char *name, object *value)
 {
   variable_object *ptr = malloc (sizeof (variable_object));
   if (NULL == ptr)
@@ -408,7 +408,7 @@ variable (const char *name, object *value)
 }
 
 object *
-number (const char *str)
+SCM_number (const char *str)
 {
   number_object *ptr = malloc (sizeof (number_object));
   if (NULL == ptr)
@@ -422,7 +422,7 @@ number (const char *str)
 }
 
 object *
-number_from_double (double x)
+SCM_number_from_double (double x)
 {
   number_object *ptr = malloc (sizeof (number_object));
   if (NULL == ptr)
@@ -457,7 +457,7 @@ SCM_string (const char *str)
 }
 
 object *
-cons (object *obj1, object *obj2)
+SCM_cons (object *obj1, object *obj2)
 {
   object *pair = malloc (sizeof (pair_object));
   if (NULL == pair)
@@ -472,7 +472,7 @@ cons (object *obj1, object *obj2)
 }
 
 object *
-func (object * (*fn) (object **, object *))
+SCM_func (object * (*fn) (object **, object *))
 {
   func_object *ptr = malloc (sizeof (func_object));
   if (NULL == ptr)
@@ -486,7 +486,7 @@ func (object * (*fn) (object **, object *))
 }
 
 object *
-lambda (object *args, object *sexp)
+SCM_lambda (object *args, object *sexp)
 {
   lambda_object *ptr = malloc (sizeof (lambda_object));
   if (NULL == ptr)
@@ -534,17 +534,17 @@ init_env ()
 {
   object *env = NULL;
   /* Warning: Using append here will waste time.  */
-  append (&env, cons (variable ("define", func (&fn_define)), NULL));
-  append (&env, cons (variable ("cons", func (&fn_cons)), NULL));
-  append (&env, cons (variable ("car", func (&fn_car)), NULL));
-  append (&env, cons (variable ("cdr", func (&fn_cdr)), NULL));
-  append (&env, cons (variable ("+", func (&fn_add)), NULL));
-  append (&env, cons (variable ("*", func (&fn_mul)), NULL));
-  append (&env, cons (variable ("-", func (&fn_sub)), NULL));
-  append (&env, cons (variable ("/", func (&fn_div)), NULL));
-  append (&env, cons (variable ("<", func (&fn_lt)), NULL));
-  append (&env, cons (variable (">", func (&fn_gt)), NULL));
-  append (&env, cons (variable ("if", func (&fn_if)), NULL));
+  append (&env, SCM_cons (SCM_variable ("define", SCM_func (&fn_define)), NULL));
+  append (&env, SCM_cons (SCM_variable ("cons", SCM_func (&fn_cons)), NULL));
+  append (&env, SCM_cons (SCM_variable ("car", SCM_func (&fn_car)), NULL));
+  append (&env, SCM_cons (SCM_variable ("cdr", SCM_func (&fn_cdr)), NULL));
+  append (&env, SCM_cons (SCM_variable ("+", SCM_func (&fn_add)), NULL));
+  append (&env, SCM_cons (SCM_variable ("*", SCM_func (&fn_mul)), NULL));
+  append (&env, SCM_cons (SCM_variable ("-", SCM_func (&fn_sub)), NULL));
+  append (&env, SCM_cons (SCM_variable ("/", SCM_func (&fn_div)), NULL));
+  append (&env, SCM_cons (SCM_variable ("<", SCM_func (&fn_lt)), NULL));
+  append (&env, SCM_cons (SCM_variable (">", SCM_func (&fn_gt)), NULL));
+  append (&env, SCM_cons (SCM_variable ("if", SCM_func (&fn_if)), NULL));
   return env;
 }
 
@@ -581,7 +581,7 @@ env_append (object **env, object *var)
           return;
         }
     }
-  append (env, cons (var, NULL));
+  append (env, SCM_cons (var, NULL));
 }
 
 object *
@@ -622,7 +622,7 @@ eval_pair (object **env, object *sexp)
   if (SCM_ATOM == (car (sexp))->type)
     {
       object *tmp = env_search (env, car (sexp));
-      object *new_sexp = cons (tmp, cdr (sexp));
+      object *new_sexp = SCM_cons (tmp, cdr (sexp));
       tmp = eval (env, new_sexp);
       free_object (car (new_sexp));
       free (new_sexp);
@@ -698,7 +698,7 @@ fn_define (object **env, object *args)
           println (value);
           return value;
         }
-      env_append (env, variable (((atom_object *) car (args))->name, value));
+      env_append (env, SCM_variable (((atom_object *) car (args))->name, value));
     }
   else
     {
@@ -708,7 +708,7 @@ fn_define (object **env, object *args)
           println (value);
           return value;
         }
-      env_append (env, variable (((atom_object *) car (args))->name, value));
+      env_append (env, SCM_variable (((atom_object *) car (args))->name, value));
     }
   return SCM_void ();
 }
@@ -736,7 +736,7 @@ fn_cons (object **env, object *args)
       println (obj2);
       return obj2;
     }
-  return cons (obj1, obj2);
+  return SCM_cons (obj1, obj2);
 }
 
 object *
@@ -802,7 +802,7 @@ fn_add (object **env, object *args)
       res += ((number_object *) tmp)->num;
       free_object (tmp);
     }
-  return number_from_double (res);
+  return SCM_number_from_double (res);
 }
 
 object *
@@ -826,7 +826,7 @@ fn_mul (object **env, object *args)
       res *= ((number_object *) tmp)->num;
       free_object (tmp);
     }
-  return number_from_double (res);
+  return SCM_number_from_double (res);
 }
 
 object *
@@ -857,7 +857,7 @@ fn_sub (object **env, object *args)
       res = ((number_object *) tmp)->num;
       free_object (tmp);
       if (1 == length (args))
-        return number_from_double (-res);
+        return SCM_number_from_double (-res);
       else
         {
           foreach (i, cdr (args))
@@ -874,7 +874,7 @@ fn_sub (object **env, object *args)
               res -= ((number_object *) tmp)->num;
               free_object (tmp);
             }
-          return number_from_double (res);
+          return SCM_number_from_double (res);
         }
     }
 }
@@ -907,7 +907,7 @@ fn_div (object **env, object *args)
       res = ((number_object *) tmp)->num;
       free_object (tmp);
       if (1 == length (args))
-        return number_from_double (1/res);
+        return SCM_number_from_double (1/res);
       else
         {
           foreach (i, cdr (args))
@@ -924,7 +924,7 @@ fn_div (object **env, object *args)
               res /= ((number_object *) tmp)->num;
               free_object (tmp);
             }
-          return number_from_double (res);
+          return SCM_number_from_double (res);
         }
     }
 }
@@ -937,7 +937,7 @@ fn_lt (object **env, object *args)
   object *i;
   double res;
   if (0 == length (args))
-    return bool (1);
+    return SCM_bool (1);
   else
     {
       tmp = eval (env, car (args));
@@ -952,7 +952,7 @@ fn_lt (object **env, object *args)
       res = ((number_object *) tmp)->num;
       free_object (tmp);
       if (1 == length (args))
-        return bool (1);
+        return SCM_bool (1);
       else
         {
           foreach (i, cdr (args))
@@ -969,14 +969,14 @@ fn_lt (object **env, object *args)
               if (res > ((number_object *) tmp)->num)
                 {
                   free_object (tmp);
-                  return bool (0);
+                  return SCM_bool (0);
                 }
               res = ((number_object *) tmp)->num;
               free_object (tmp);
             }
         }
     }
-  return bool (1);
+  return SCM_bool (1);
 }
 object *
 fn_gt (object **env, object *args)
@@ -986,7 +986,7 @@ fn_gt (object **env, object *args)
   object *i;
   double res;
   if (0 == length (args))
-    return bool (1);
+    return SCM_bool (1);
   else
     {
       tmp = eval (env, car (args));
@@ -1001,7 +1001,7 @@ fn_gt (object **env, object *args)
       res = ((number_object *) tmp)->num;
       free_object (tmp);
       if (1 == length (args))
-        return bool (1);
+        return SCM_bool (1);
       else
         {
           foreach (i, cdr (args))
@@ -1018,14 +1018,14 @@ fn_gt (object **env, object *args)
               if (res < ((number_object *) tmp)->num)
                 {
                   free_object (tmp);
-                  return bool (0);
+                  return SCM_bool (0);
                 }
               res = ((number_object *) tmp)->num;
               free_object (tmp);
             }
         }
     }
-  return bool (1);
+  return SCM_bool (1);
 }
 
 object *
