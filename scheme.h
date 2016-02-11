@@ -17,7 +17,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with toy-scheme.  If not, see <http://www.gnu.org/licenses/>.  */
 
+#ifndef _SCHEME_H
+#define _SCHEME_H
+
+#include "object.h"
 #include "parser.h"
 
 #define SCM_RELEASE   "toy-scheme 0.0.0"
 #define SCM_COPYRIGHT SCM_RELEASE "\n" "Copyright (C) 2016 E-Neo"
+
+#endif

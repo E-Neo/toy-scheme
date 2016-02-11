@@ -17,6 +17,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with toy-scheme.  If not, see <http://www.gnu.org/licenses/>.  */
 
+#ifndef _OBJECT_H
+#define _OBJECT_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -208,3 +211,5 @@ object *fn_div (object **env, object *args); /* / */
 object *fn_lt (object **env, object *args); /* < */
 object *fn_gt (object **env, object *args); /* > */
 object *fn_if (object **env, object *args); /* if */
+
+#endif

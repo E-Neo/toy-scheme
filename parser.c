@@ -20,7 +20,48 @@ along with toy-scheme.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "parser.h"
 
 object *
-parse (object **env, const char *line)
+parse_atom (object **env, const char *str)
+{
+  return SCM_atom (str);
+}
+
+object *
+parse_bool (object **env, const char *str)
+{
+  char *msg;
+  object *ret;
+  if (2 == strlen (str) && '#' == str[0])
+    {
+      if ('t' == str[1] || 'T' == str[1])
+        ret = SCM_bool (1);
+      else if ('f' == str[1] || 'F' == str[1])
+        ret = SCM_bool (0);
+      else
+        {
+          msg = malloc (18 + 2 + 1);
+          sprintf (msg, "Unbound variable: %s", str);
+          ret = SCM_error (EUNBOUND, msg);
+          free (msg);
+        }
+    }
+  else
+    {
+      msg = malloc (18 + strlen (str) + 1);
+      sprintf (msg, "Unbound variable: %s", str);
+      ret = SCM_error (EUNBOUND, msg);
+      free (msg);
+    }
+  return ret;
+}
+
+object *
+parse_number (object **env, const char *str)
+{
+  return SCM_number (str);
+}
+
+object *
+parse (object **env, const char *str)
 {
   return SCM_number ("3.14159265");
 }

@@ -17,6 +17,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with toy-scheme.  If not, see <http://www.gnu.org/licenses/>.  */
 
+#ifndef _PARSER_H
+#define _PARSER_H
+
 #include "object.h"
 
-object *parse (object **env, const char *line);
+object *parse_atom (object **env, const char *str);
+object *parse_bool (object **env, const char *str);
+object *parse_number (object **env, const char *str);
+object *parse (object **env, const char *str);
+
+#endif
