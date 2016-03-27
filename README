@@ -1,1 +1,5 @@
                                 toy-scheme
+
+toy-scheme is not finished. So don't expect it to work as a finished scheme
+implementation. If you are interested in scheme language, maybe you should
+check out GNU Guile [[https://www.gnu.org/software/guile/]]
