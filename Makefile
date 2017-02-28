@@ -1,2 +1,7 @@
-a.out : scheme.c object.c parser.c
-	gcc -Wall -g -o $@ $^ -lreadline
+OCB_FLAGS = -I src
+OCB = ocamlbuild $(OCB_FLAGS)
+native:
+	$(OCB) calc.native
+
+clean:
+	$(OCB) -clean

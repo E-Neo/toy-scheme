@@ -1,32 +1,20 @@
-# Object files
-*.o
-*.ko
-*.obj
-*.elf
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Libraries
-*.lib
+*.annot
+*.cmo
+*.cma
+*.cmi
 *.a
-*.la
-*.lo
+*.o
+*.cmx
+*.cmxs
+*.cmxa
 
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
+# ocamlbuild working directory
+_build/
 
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
+# ocamlbuild targets
+*.byte
+*.native
 
-# Debug files
-*.dSYM/
+# oasis generated files
+setup.data
+setup.log
